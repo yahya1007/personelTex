@@ -1,0 +1,1058 @@
+\NeedsTeXFormat{LaTeX2e}%
+\ProvidesPackage{ProfModels}[2026/08/04 Maquettage de documents]%
+%------------------------------------------------------
+\RequirePackage{iftex}
+
+\ifLuaTeX\else
+  \PackageError{ProfModels}{Ce package nécessite LuaLaTeX}{Compilez avec LuaLaTeX.}
+\fi
+
+%=================================================
+% Langue et polices
+%=================================================
+\RequirePackage{fontspec} 
+\setmainfont{Linux Libertine O}
+\RequirePackage{amsmath}
+\RequirePackage{lua-unicode-math} 
+\RequirePackage{lum-xits}
+%============== Options du package ==========
+\newif\ifProfLoadStyle
+\newif\ifProfLoadDiagram
+\newif\ifProfLoadFigure
+
+\ProfLoadStylefalse
+\ProfLoadDiagramfalse
+\ProfLoadFigurefalse
+
+\DeclareOption{style}{\ProfLoadStyletrue}
+\DeclareOption{diagram}{\ProfLoadDiagramtrue}
+\DeclareOption{figur}{\ProfLoadFiguretrue}
+
+\DeclareOption{all}{%
+  \ProfLoadStyletrue
+  \ProfLoadDiagramtrue
+  \ProfLoadFiguretrue}
+  
+% final (defaut) / brouillon : ajoute un filigrane "BROUILLON" sur
+% chaque page, pratique pendant la redaction d'un devoir/examen.
+\newif\ifPfMBrouillon
+\PfMBrouillonfalse
+\DeclareOption{brouillon}{\PfMBrouillontrue}
+\DeclareOption{final}{\PfMBrouillonfalse}
+
+\DeclareOption*{%
+  \PackageWarning{ProfModels}{Option inconnue '\CurrentOption'}%
+}%
+\ProcessOptions\relax
+%------------------------------------------------------
+
+ %----------------------------------------------
+\RequirePackage[a4paper,left=15mm,right=10mm,top=10mm,
+bottom=10mm,marginparwidth=1cm,marginparsep=2pt,noheadfoot]{geometry}
+%-------------------------------------------------
+\RequirePackage{xcolor}
+\RequirePackage{tikz}
+\usetikzlibrary{babel} 
+\usetikzlibrary{calc}
+
+\RequirePackage[skins,breakable,raster]{tcolorbox}
+\RequirePackage{changepage}
+\RequirePackage{multicol}
+\RequirePackage[a]{esvect}
+\RequirePackage{graphicx}
+
+\providecommand{\ProfModelsImagesPath}{./../../../../Images/}
+\graphicspath{%
+  {\ProfModelsImagesPath}%
+  {./}%
+  {./../../../Images/}%
+  {C:/Users/ELAYDIYAHYA/Documents/latexExam/Images/}%
+}
+
+\RequirePackage{systeme}
+\RequirePackage{ifthen}
+\RequirePackage{marginnote}
+% Pour recuperer numeriquement la valeur d'un \label (sans mise en forme,
+% utilisable dans des \ifnum) -> sert au total automatique d'exercices
+% dans \ChoisirExercices (voir plus bas).
+\RequirePackage{refcount}
+%---------------------------------------------
+\RequirePackage[inline]{enumitem}
+\setlist[enumerate,1,2]{font=\bfseries,leftmargin=*}
+\setlist[itemize,1]{leftmargin=2em, labelsep= 0.8em, labelwidth=1em}
+%----------------------------------------------
+\RequirePackage{tasks}
+\settasks{label-format =\bfseries, label-offset ={0.33em},label-width={1em},item-indent ={2em}}
+%-------------------------------------------------------
+\RequirePackage{tabularx}
+\RequirePackage[column=O]{cellspace}
+\addparagraphcolumntypes{X}
+\setlength{\cellspacebottomlimit}{5pt}
+\setlength{\cellspacetoplimit}{5pt}
+%----------------------------------------------------
+%---------------------------------------------------
+% packages nécessaires
+\RequirePackage{cancel}
+\RequirePackage{fontawesome}
+\RequirePackage{siunitx}
+\RequirePackage{calc}
+\RequirePackage{xlop}
+\RequirePackage{xinttools}%calculer le bareme total
+\RequirePackage{wrapstuff}
+\usepackage{advdate}
+  \RequirePackage[french]{babel}
+  \frenchsetup{StandardItemLabels=true}
+%--------------------------------------------------------
+%définition des clés
+\RequirePackage{simplekv}
+
+\setKVdefault[Boulot]{Fiche=false,DM=false,DS=false,DevS=false,Exam=false,Olym=false}%
+
+\setKVdefault[DM]{Numero=1,Date=\today, Prive=true, Classe={},Niveau=3,Code={},Semestre=1, FinDate=\today}
+
+\setKVdefault[DS]{Numero=1,Date=\today, Classe={},Niveau=3,Code={} ,
+Calculatrice=false,Sujet={}}%
+
+\setKVdefault[Exam]{Prive=true ,Date=\today ,Code={}}%
+\setKVdefault[Olym]{Date=\today ,Code={}}%
+\setKVdefault[Fiche]{Theme= Title ,Date=\today ,Niveau=1,Classe=A.C,Code={},
+NomExercice=Exercice}%
+
+
+\setKVdefault[ClesExercices]{BaremeTotal=true,BaremeDetaille=false,MotPoint=point,
+Calculatrice=true,TitreExo=Exercice,AffichageTitre=false,
+AffichageCompetence=false,AffichageSource=false,Id={},Print=true}%
+% Id : identifiant de l'exercice pour le tirage aléatoire (voir \ChoisirExercices).
+% Un exercice sans Id (valeur par défaut) est toujours affiché.
+
+\defKV[ClesExercices]{Source=\setKV[ClesExercices]{AffichageSource}}%
+\defKV[ClesExercices]{Titre=\setKV[ClesExercices]{AffichageTitre}}%
+\defKV[ClesExercices]{Competence=\setKV[ClesExercices]{AffichageCompetence}}%
+
+% Definition de longueurs
+
+
+%définition des compteurs
+\newcounter{PfMExo}%Numéro des exercices
+\setcounter{PfMExo}{0}%
+
+\newcounter{PfMExoCatalogue}%Position de chaque exercice dans le fichier source
+\setcounter{PfMExoCatalogue}{0}%Sert d'Id automatique pour \ChoisirExercices
+
+\newcounter{PfMAlea}% valeur aléatoir
+\setcounter{PfMAlea}{0}%
+
+\newcounter{PfMNbLogo}%Pour les logos
+\setcounter{PfMNbLogo}{0}%
+\newcounter{Maquette}%Pour compter le nombres de "travaux"
+\setcounter{Maquette}{0}%
+
+% couleurs --------------------------------------------------
+
+  \colorlet{PfMColCpt}{gray!50}
+  \colorlet{PfMColSrc}{gray!50}
+  \colorlet{PfMCadreFiche}{gray!50}
+  \colorlet{PfMCadreDM}{gray!85}
+\definecolor{washoutgrey}{RGB}{140,140,140}
+\definecolor{lightgrey}{RGB}{240,240,240}
+
+%------------- Filigrane "BROUILLON" (option brouillon) ------
+\ifPfMBrouillon
+  \AddToHook{shipout/foreground}{%
+    \begin{tikzpicture}[remember picture,overlay]
+      \node[rotate=45,scale=6,text=gray,opacity=0.18,font=\bfseries] at (current page.center) {BROUILLON};
+    \end{tikzpicture}%
+  }%
+\fi
+%------------------------------------------------------------
+
+%------------  Roman letter -----------------
+\newcommand{\RNum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}%
+\newcommand{\rnum}[1]{\lowercase\expandafter{\romannumeral #1\relax}}%
+\newcommand{\lrp}[1]{\left(#1\right)}
+\newcommand{\lrc}[1]{\left[#1\right]}
+\newcommand{\lra}[1]{\left\{#1\right\}}
+\newcommand{\oij}{\lrp{O,I,J}}
+\newcommand{\pptit}{\leqslant}
+\newcommand{\pgrd}{\geqslant}
+\renewcommand{\parallel}{\sslash}
+
+%%%%%%%% SÉLECTION ALÉATOIRE D'EXERCICES -------------------
+
+\newif\ifPfMSelectionActive
+\PfMSelectionActivefalse
+\newif\ifPfMAfficherExo
+\newif\ifPfMTirageFige% le tirage a-t-il été figé par \FixerTirageExo ?
+\PfMTirageFigefalse
+\newcounter{PfMTirage}% numéro du tirage en cours (permet plusieurs \ChoisirExercices)
+\newcommand\PfMListeChoisis{}% liste (texte, pour affichage/debug uniquement)
+\newsavebox\PfMExoPoubelle % boîte "poubelle" pour les exercices non tirés
+
+
+\newcommand\FixerTirageExo[1]{\pgfmathsetseed{#1}\PfMTirageFigetrue}
+
+\NewDocumentCommand\ChoisirExercices{mO{}}{%
+	\setcounter{PfMExoCatalogue}{0}%
+  \def\PfM@ArgTotal{#2}%
+  \ifx\PfM@ArgTotal\@empty
+    % Récupération via refcount : retourne 0 si label inconnu
+    \edef\PfM@refval{\getrefnumber{PfMFinMaquette\theMaquette}}%
+    \edef\PfM@refzero{0}%
+    \ifx\PfM@refval\PfM@refzero
+        \PackageWarning{ProfModels}%
+ {Nombre total d'exercices inconnu pour cette Maquette (page \thepage) : ceci est normal lors d'une premiere compilation.
+           Utilisation provisoire de #1 exercices en attendant.
+           Recompilez pour obtenir le tirage definitif}%
+      \edef\PfMTotalCalcExo{#1}%
+    \else
+      \edef\PfMTotalCalcExo{\PfM@refval}%
+    \fi
+  \else
+    \let\PfMTotalCalcExo\PfM@ArgTotal
+  \fi
+  \ifnum#1>\PfMTotalCalcExo\relax
+    \PackageError{ProfModels}%
+      {Impossible de choisir #1 exercices parmi \PfMTotalCalcExo}%
+      {Le premier argument doit etre inferieur ou egal au nombre total
+       d'exercices disponibles dans cette Maquette.}%
+  \fi
+  \ifPfMTirageFige\else
+        \PackageWarning{ProfModels}%
+  {Tirage non fige : appelez \string\FixerTirageExo{N} AVANT \string\ChoisirExercices.}%
+  \fi
+  \stepcounter{PfMTirage}%
+  \PfMSelectionActivetrue
+  \gdef\PfMListeChoisis{}%
+  \foreach \PfMi in {1,...,#1}{%
+    \edef\PfMTrouve{0}%
+    \whiledo{\PfMTrouve=0}{%
+      \pgfmathrandominteger{\PfMChoixExo}{1}{\PfMTotalCalcExo}%
+      \@ifundefined{PfMChoisi\thePfMTirage @\PfMChoixExo}%
+        {%
+          \expandafter\xdef\csname
+            PfMChoisi\thePfMTirage @\PfMChoixExo\endcsname{1}%
+          \ifx\PfMListeChoisis\@empty
+            \xdef\PfMListeChoisis{\PfMChoixExo}%
+          \else
+            \xdef\PfMListeChoisis{\PfMListeChoisis, \PfMChoixExo}%
+          \fi
+          \edef\PfMTrouve{1}%
+        }%
+        {}%
+    }%
+  }%
+}%
+
+\newcommand\ListeExercicesChoisis{\PfMListeChoisis}
+\newcommand\PfM@MotToujours{ok}
+
+\newcommand\PfM@VerifierAffichage{%
+  \stepcounter{PfMExoCatalogue}%
+  \ifboolKV[ClesExercices]{Print}%
+    {%
+      \edef\PfMIdCourant{\useKV[ClesExercices]{Id}}%
+      \ifx\PfMIdCourant\@empty
+        \edef\PfMIdCourant{\thePfMExoCatalogue}%
+        \PfM@VerifierAffichageParTirage
+      \else
+        \ifx\PfMIdCourant\PfM@MotToujours
+          \PfMAfficherExotrue
+        \else
+          \PfM@VerifierAffichageParTirage
+        \fi
+      \fi
+    }%
+    {%
+      \PfMAfficherExofalse
+    }%
+}%
+\newcommand\PfM@VerifierAffichageParTirage{%
+  \ifPfMSelectionActive
+    \@ifundefined{PfMChoisi\thePfMTirage @\PfMIdCourant}%
+      {\PfMAfficherExofalse}%
+      {\PfMAfficherExotrue}%
+  \else
+    \PfMAfficherExotrue
+  \fi
+}%
+%------------------------------------------------------
+%============== DEBUT-MULTI-FICHIERS ==============
+%%%%%%%% VERSION COMPATIBLE DES DEUX SYSTÈMES -------------------
+
+\newif\ifPfMModeMultiFichiers
+\PfMModeMultiFichiersfalse
+
+\newcommand\PfMFichierCourant{global} % Fichier par défaut
+
+% Commande pour marquer le début d'un fichier d'exercices
+\newcommand\DebutFichierExercices[1]{%
+  \edef\PfMFichierCourant{\zap@space#1 \@empty}%
+  \setcounter{PfMExoCatalogue}{0}%
+  \begingroup
+  \def\PfMEnBanque{1}%
+}
+
+\newcommand\FinFichierExercices{%
+	\endgroup
+  \edef\@currentlabel{\thePfMExoCatalogue}%
+  \label{PfMFinFichier\PfMFichierCourant}%
+}
+\newcommand\InputBanque[1]{%
+  \begingroup
+  \def\PfMEnBanque{1}%
+  \input{#1}%
+  \endgroup
+}%
+%=====================================================
+\newcommand{\ClassesDisponibles}{Apic1, Apic2, Apic3}
+\newcommand{\SemestresDisponibles}{Sem1 et Sem2}
+\newcommand{\PartsDisponibles}{Part1, Part2, Part3}
+
+\newcommand{\InputBank}[4]{%
+  \IfFileExists{C:/Users/ELAYDIYAHYA/Documents/latexExam/BankExercices/Apic#1/Sem#2/Part#3/#4.tex}{%
+    \InputBanque{C:/Users/ELAYDIYAHYA/Documents/latexExam/BankExercices/Apic#1/Sem#2/Part#3/#4}%
+  }{%
+    \PackageError{InputBank}%
+      {Fichier introuvable : Apic#1/Sem#2/Part#3/#4.tex (classes : \ClassesDisponibles\space| semestres : \SemestresDisponibles\space| parties : \PartsDisponibles\space| fichier incorrect)}%
+      {V\'erifiez la classe, le semestre, la partie et le nom de fichier pass\'es \`a \string\InputBank.}%
+  }%
+}%
+%=====================================================
+% Version multi-fichiers de \ChoisirExercices
+\NewDocumentCommand\ChoisirExercicesMulti{m}{%
+  \ifPfMTirageFige\else
+ \PackageWarning{ProfModels}%
+ {Tirage non fige : appelez \string\FixerTirageExo{N} AVANT
+      \string\ChoisirExercicesMulti.}%
+  \fi
+  \stepcounter{PfMTirage}%
+  \PfMSelectionActivetrue
+  \gdef\PfMListeChoisis{}%
+  
+  \foreach \PfMFichSpec in {#1}{%
+    \expandafter\PfM@ParseFichierSpec\expandafter{\PfMFichSpec}%
+  }%
+}
+
+\def\PfM@ParseFichierSpec#1{%
+  \PfM@ParseFichierSpecAux#1\@nil
+}
+\def\PfM@ParseFichierSpecAux#1=#2\@nil{%
+  \edef\PfMNomFich{\zap@space#1 \@empty}%
+  \edef\PfMNbExo{\zap@space#2 \@empty}%
+  \PfM@TirerPourFichier
+}
+
+\newcommand\PfM@TirerPourFichier{%
+  \edef\PfM@refval{\getrefnumber{PfMFinFichier\PfMNomFich}}%
+  \edef\PfM@refzero{0}%
+  \ifx\PfM@refval\PfM@refzero
+  \PackageWarning{ProfModels}%
+  {Nombre total d'exercices inconnu pour le fichier '\PfMNomFich'. Recompilez pour obtenir le tirage correct.}%
+    \edef\PfMTotalCalcExo{\PfMNbExo}%
+  \else
+    \edef\PfMTotalCalcExo{\PfM@refval}%
+  \fi
+  
+  \ifnum\PfMNbExo>\PfMTotalCalcExo\relax
+    \PackageError{ProfModels}%
+      {Impossible de choisir \PfMNbExo\space exercices parmi \PfMTotalCalcExo\space dans '\PfMNomFich'}%
+      {Verifiez le nombre d'exercices disponibles dans ce fichier.}%
+  \fi
+  
+  \foreach \PfMi in {1,...,\PfMNbExo}{%
+    \edef\PfMTrouve{0}%
+    \whiledo{\PfMTrouve=0}{%
+      \pgfmathrandominteger{\PfMChoixExo}{1}{\PfMTotalCalcExo}%
+      % NOUVELLE CLÉ : on ajoute "MULTI@" pour différencier
+      \@ifundefined{PfMChoisiMULTI\thePfMTirage @\PfMNomFich @\PfMChoixExo}%
+        {%
+          \expandafter\xdef\csname
+            PfMChoisiMULTI\thePfMTirage @\PfMNomFich @\PfMChoixExo\endcsname{1}%
+          \ifx\PfMListeChoisis\@empty
+            \xdef\PfMListeChoisis{\PfMNomFich:\PfMChoixExo}%
+          \else
+            \xdef\PfMListeChoisis{\PfMListeChoisis, \PfMNomFich:\PfMChoixExo}%
+          \fi
+          \edef\PfMTrouve{1}%
+        }%
+        {}%
+    }%
+  }%
+}
+
+% MODIFICATION CLÉE : On teste maintenant LES DEUX conventions
+\renewcommand\PfM@VerifierAffichageParTirage{%
+  \ifPfMSelectionActive
+    % D'abord on teste le mode MULTI (avec nom de fichier)
+    \@ifundefined{PfMChoisiMULTI\thePfMTirage @\PfMFichierCourant @\PfMIdCourant}%
+      {% Pas trouvé en mode multi, on teste le mode GLOBAL
+        \@ifundefined{PfMChoisi\thePfMTirage @\PfMIdCourant}%
+          {\PfMAfficherExofalse}% Pas trouvé du tout
+          {\PfMAfficherExotrue}%  Trouvé en mode global
+      }%
+      {\PfMAfficherExotrue}% Trouvé en mode multi
+  \else
+    \PfMAfficherExotrue
+  \fi
+}%
+%============== FIN MULTI-FICHIERS ==============
+%%%%%%%% BAREME ---------------------------------------
+
+\newlength{\brouillonBrm}
+
+\colorlet{PfMColPoints}{black}
+
+\newcommand*\FranPt[1]{%
+  \ifboolKV[ClesExercices]{BaremeDetaille}{%
+    \textcolor{PfMColPoints}{(\num{#1}\,p)}%
+  }{}%
+}
+
+\newcommand\BaremeEspace@Marge{15pt}
+\newcommand\BaremeEspace@MargeCorrection{0pt}
+
+\newcommand*{\brm}[2][0]{%
+  \ifboolKV[Boulot]{Fiche}{}{%
+  \ifboolKV[Boulot]{DM}{}{%
+  \ifPfMAfficherExo
+    \immediate\write\@auxout{%
+      \string\opadd*{#2}%
+      {total\theMaquette-\the\c@PfMExo}%
+      {total\theMaquette-\the\c@PfMExo}%
+      \string\opcopy{\thePfMExo}{TotalExo\theMaquette}%
+    }%
+    \ifboolKV[ClesExercices]{BaremeDetaille}{%
+
+\reversemarginpar\marginnote{\footnotesize\FranPt{#2}}[#1 cm]
+      \ignorespaces%
+    }{}%
+  \fi
+  }}%
+}%
+
+\newcommand\total[1]{%
+  \@ifundefined{Op@total#1}{recompilez}%
+  {%
+    \opunzero{total#1}% on ne sait jamais
+    \opset{decimalsepsymbol={,}}
+    \opprint{total#1}~%
+    \opset{decimalsepsymbol={.}}
+    \opcmp{total#1}{2}%
+    \ifopge \useKV[ClesExercices]{MotPoint}s\else \useKV[ClesExercices]{MotPoint}\fi
+  }%
+}
+
+\newcommand\NoteFinale{%
+  \@ifundefined{Op@TotalExo\theMaquette}{Recompilez}%
+  {%
+    \opexport{TotalExo\theMaquette}{\TotalExo}%Le total d'exercices de cette Maquette est \TotalExo.
+    \xdef\NoteTotale{0}%
+    \xintFor* ##1 in {\xintSeq{1}{\TotalExo}}\do{%
+      \@ifundefined{Op@total\theMaquette-##1}%
+        {}% exercice sans bareme detaille (ou hors selection) : contribue pour 0
+        {%
+          \opexport{total\theMaquette-##1}{\totalUn}%
+          \xdef\NoteTotale{\fpeval{\NoteTotale+\totalUn}}%
+        }%
+    }%
+   \NoteTotale%
+  }%
+}%
+
+%---------------Fin Barème --------------------------
+%######################################################################
+% PARTIE 1 : STYLES ET ENVIRONNEMENTS PROFMODELS (ex ProfModelsStyles.sty)
+%######################################################################
+
+%---------- style exercices DM ----------------------
+\tcbset{%
+tikzDM/.style={%
+attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
+ top=3mm, coltitle=black,%
+  %boxed title style={frame code={empty}},colbacktitle=white
+ boxed title style={colback=white,arc=0mm}%
+ }}
+%----  Style exercices DS  ---------------------------
+\tcbset{%
+  tikzds/.style={%
+    attach boxed title to top left={xshift=1cm,yshift*=1mm-\tcboxedtitleheight},
+    boxed title style={frame code={
+        \path[fill=tcbcolback!30!black]
+        ([yshift=-1mm,xshift=-1mm]frame.north west)
+        arc[start angle=0,end angle=180,radius=1mm]
+        ([yshift=-1mm,xshift=1mm]frame.north east)
+        arc[start angle=180,end angle=0,radius=1mm];
+        \path[left color=tcbcolback!60!black,right color=tcbcolback!60!black,
+        middle color=tcbcolback!80!black]
+        ([xshift=-2mm]frame.north west) -- ([xshift=2mm]frame.north east)
+        [rounded corners=1mm]-- ([xshift=1mm,yshift=-1mm]frame.north east)
+        -- (frame.south east) -- (frame.south west)
+        -- ([xshift=-1mm,yshift=-1mm]frame.north west)
+        [sharp corners]-- cycle;
+      },interior engine=empty,
+    }
+  }%
+}%
+
+%---- style exercices Fiche--------------------------------
+\tcbset{%
+  tikzfiche/.style={%
+    before skip=1em,
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=PfMCadreFiche,
+    overlay unbroken and first={%
+      \node[%
+      name=A,
+      fill=white,
+      anchor=west,
+      xshift=10pt,
+      ] at (frame.north west){\bfseries\sffamily \useKV[Fiche]{NomExercice} \thePfMExo\ifboolKV[ClesExercices]{AffichageTitre}{ : \useKV[ClesExercices]{Titre}}{}};
+      \ifboolKV[ClesExercices]{AffichageCompetence}{%
+        \node[%
+        fill=white,
+        anchor=east,
+        xshift=-10pt,
+        text=PfMColCpt,%
+        ]
+        at (frame.north east)
+        {\itshape\scriptsize\sffamily Compétence(s) dominante(s) : \useKV[ClesExercices]{Competence}};
+      }{}%
+      %%
+      \ifboolKV[ClesExercices]{AffichageSource}{%
+        \node[%
+        fill=white,
+        anchor=east,
+        xshift=-10pt,
+        text=PfMColSrc,
+        ]
+        at (frame.south east)
+        {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
+      }{}%
+    }%
+  }%
+}%
+%-------------------------------------------------------
+\NewDocumentEnvironment{exerciceDM}{O{}O{tikzDM}}{%
+  \setcounter{PfMAlea}{0}%
+  \useKVdefault[ClesExercices]
+  \setKV[ClesExercices]{#1}
+  \PfM@VerifierAffichage
+  \ifPfMAfficherExo
+  \refstepcounter{section}
+  \refstepcounter{PfMExo}
+  \tcolorbox[%
+  lowerbox=ignored,
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=PfMCadreDM,
+    fonttitle=\bfseries\sffamily,
+ 	title=Exercice \thePfMExo,
+   #2,
+   overlay unbroken and first={%
+      \ifboolKV[ClesExercices]{AffichageSource}{%
+        \node[%
+        fill=white,
+        anchor=east,
+        xshift=-10pt,
+        text=gray!50,
+        ]
+        at (frame.south east)
+        {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
+      }{}%
+    },%
+  label is label,
+  label=page-\theMaquette-\thePfMExo%
+  ]
+  \else
+  \setbox\PfMExoPoubelle\vbox\bgroup
+  \fi
+}{%
+  \ifPfMAfficherExo
+    \endtcolorbox%
+  \else
+    \egroup%
+  \fi
+}
+%-----------------------------------------------------
+
+\NewDocumentEnvironment{exerciceFiche}{O{}}{%
+  \setcounter{PfMAlea}{0}%
+  \setcounter{PfMNbLogo}{1}%
+  \useKVdefault[ClesExercices]%
+  \setKV[ClesExercices]{#1}%
+ %\setKV[ClesExercices]{BaremeTotal=false,BaremeDetaille=false}
+  \PfM@VerifierAffichage
+  \ifPfMAfficherExo
+  \refstepcounter{section}%
+  \refstepcounter{PfMExo}%
+  \tcolorbox[%
+  tikzfiche,
+  label is label,
+  label=page-\theMaquette-\thePfMExo
+  ]
+  \else
+  \setbox\PfMExoPoubelle\vbox\bgroup
+  \fi
+}{%
+  \ifPfMAfficherExo
+    \endtcolorbox%
+  \else
+    \egroup%
+  \fi
+}
+%-------------------------------------------------------
+\NewDocumentEnvironment{exerciceDS}{O{}O{tikzds}}{%
+  \setcounter{PfMAlea}{0}%
+  \useKVdefault[ClesExercices]%
+  \setKV[ClesExercices]{#1}%
+  \PfM@VerifierAffichage
+  \ifPfMAfficherExo
+  \refstepcounter{section}%
+  \refstepcounter{PfMExo}%
+  \immediate\write\@auxout{%
+    \string\opcopy{\thePfMExo}{TotalExo\theMaquette}%
+  }
+  \ifboolKV[ClesExercices]{BaremeTotal}{%
+    \immediate\write\@auxout{%
+      \string\opcopy{0}{total\theMaquette-\the\c@PfMExo}%
+    }}{}
+  \tcolorbox[%
+ lowerbox=ignored,
+  enhanced,
+    breakable,
+  colback=white,
+ colframe=PfMCadreDM,
+  fonttitle=\bfseries\sffamily,
+    title=Exercice \thePfMExo,
+    #2,
+    overlay unbroken and first={%
+      \ifboolKV[ClesExercices]{AffichageTitre}{\node[fill=white,
+        anchor=east,
+        yshift=0.5pt,
+        xshift=-10pt,
+        text=gray!85,
+        ]
+        at (frame.north) {\useKV[ClesExercices]{Titre}};}{}
+      \ifboolKV[ClesExercices]{AffichageSource}{%
+        \node[
+        fill=white,
+        anchor=east,
+        yshift=0.5pt,
+        xshift=-10pt,
+        text=gray!85,
+        ]
+        at (frame.south east)
+        {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
+      }{}
+      \ifboolKV[ClesExercices]{BaremeTotal}{%
+        \node[
+        fill=white,
+        anchor=east,
+        xshift=-10pt,
+        text=black,
+        font=\bfseries
+        ]
+        at (frame.north east)
+        {\footnotesize\sffamily \total{\theMaquette-\the\c@PfMExo}};
+      }{}
+    },%
+  label is label,
+  label=page-\theMaquette-\thePfMExo
+  ]
+  \else
+  \setbox\PfMExoPoubelle\vbox\bgroup
+  \fi
+}{%
+  \ifPfMAfficherExo
+    \endtcolorbox%
+  \else
+    \egroup%
+  \fi
+}%
+%-------Style Maquette DevS -------------------------------
+\newcommand\TikzDevS{%
+  \clearpage
+  \begin{tcolorbox}[colback=gray!5,%
+    enhanced,%
+    overlay unbroken and first={%
+      \node[yshift=1em] at (frame.south) {\scriptsize\sffamily-- Calculatrice \ifboolKV[DS]{Calculatrice}{autorisée}{interdite} --};
+    }
+    ]%
+    \sffamily Devoir surveillé N\textsuperscript{\underline{o}}\useKV[DS]{Numero} (Sujet \useKV[DS]{Sujet})\hfill\useKV[DS]{Niveau}.A.C \useKV[DS]{Classe}
+    \par{\tiny\useKV[DS]{Code}}\hfill{\scriptsize\useKV[DS]{Date}}
+  \end{tcolorbox}%
+}%
+
+%-------Style Maquette Fiche  -----------------------------
+\NewDocumentCommand\TikzFiche{}{%
+  \begin{tcolorbox}[spread upwards=-1cm,colback=gray!5]%
+    \Large\sffamily \useKV[Fiche]{Theme}\hfill\useKV[Fiche]{Niveau} \useKV[Fiche]{Classe}%
+    \par{\tiny\useKV[Fiche]{Code}}\hfill{\scriptsize\useKV[Fiche]{Date}}%
+  \end{tcolorbox}%
+}
+%--------------------------------------------------------
+
+%-----------------------------------------------------
+%Alias pour tous les exercices.
+\NewDocumentEnvironment{exercice}{}{}{}%
+
+%%%%%%%%%% Style Maquettes ---------------------------
+
+%--------------Style Maquette DM ---------------
+\NewDocumentCommand\TikzDM{}{%
+  \clearpage%
+  \begin{tcboxeditemize}[raster columns=4,raster rows=1, raster equal height=rows]{colback=lightgrey,width=\linewidth}
+\tcbitem[enhanced jigsaw,raster multicolumn=3, fontupper=\bfseries, colback=white, boxrule=2pt, segmentation style={solid,gray!50!black,line width=2pt}]
+        \begin{Large}
+        \textbf{Devoir en temps libre \useKV[DM]{Numero}}\hfill
+         \textbf{\useKV[DM]{Niveau}.A.C\useKV[DM]{Classe}}
+        \end{Large}
+      \vspace*{2mm}
+   
+        \textbf{Mathématiques} \hfill \useKV[DM]{Date}   
+        \tcblower
+        
+        \begin{large}
+        \textbf{\`A rendre le : \useKV[DM]{FinDate}}\hfill
+        \textbf{S : \RNum{\useKV[DM]{Semestre}}}
+        \end{large}
+ \tcbitem[enhanced jigsaw, colback=lightgrey, boxrule=0pt,left=0pt,right=0pt,top=0pt,bottom=0pt,frame code={empty}]
+  \ifboolKV[DM]{Prive}{%
+ \includegraphics[width=\linewidth]{logoPr.png}}%
+ {\includegraphics[width=\linewidth]{logoPu.png}}%
+\end{tcboxeditemize}
+ }%
+
+ %========== Style Maquette DS =========================
+\newcommand\TikzDS{%
+\clearpage%
+\begin{tcboxeditemize}[raster columns=8,raster rows=2, raster equal height=rows,raster height=\tcbtextheight]{colback=lightgrey}
+\tcbitem[raster multicolumn=6,raster multirow=2,blankest,raster height=\tcbtextheight]
+\begin{tcbitemize}[raster columns=6,raster rows=2]
+\tcbitem[enhanced jigsaw,raster multicolumn=6, fontupper=\bfseries, colback=white, boxrule=2pt, segmentation style={solid,gray!50!black,line width=2pt},
+overlay unbroken and first={%
+      \node[anchor=north east, yshift=-2mm] at ([yshift=\tcboverlaplower]segmentation.east) {\sffamily-- Calculatrice \ifboolKV[DS]{Calculatrice}{autorisée}{interdite} --};}]
+   \begin{Large}
+   \textbf{\sffamily Devoir Surveillé N\textsuperscript{\underline{o}} \useKV[DS]{Numero}}
+        \end{Large}\hfill
+   \begin{Large}
+   \textbf{\useKV[DS]{Niveau}.A.C\useKV[DS]{Classe}}
+   \end{Large}\vspace*{2mm}
+   
+   \textbf{\sffamily Mathématiques}\hfill \useKV[DS]{Sujet} \hfill\textbf{\useKV[DS]{Date}}
+        \tcblower
+        \begin{large}
+        \textbf{Durée : 1 H}  
+        \end{large}
+ 
+\tcbitem[coltitle=black, enhanced jigsaw,raster multicolumn=5, boxrule=2pt,colback=white]
+        \begin{large}\textbf{Nom :}\end{large}
+\tcbitem[coltitle=black, enhanced jigsaw,colback=white, boxrule=2pt,halign=left,left=2pt]
+        \begin{large}\textbf{N°:}\end{large}
+\end{tcbitemize}
+\tcbitem[enhanced jigsaw, fontupper=\bfseries,raster multirow=2,raster multicolumn=2, raster height=\tcbtextheight,colback=white, boxrule=2pt, segmentation style={solid,gray!50!black,line width=2pt},
+finish={\draw[gray!50!black,line width=2pt] 
+([xshift=-2pt,yshift=1pt]frame.25) -- ([xshift=0pt,yshift=1pt]frame.south);
+\node[above=5pt,xshift=5pt] at ($(frame.south)!.5!(frame.south east)$)  {\begin{Huge}\textbf{\NoteFinale} \end{Huge}};
+ }]%
+    \begin{center}\begin{Large}\textbf{Note}\end{Large}\end{center}
+    \tcblower
+ 
+\end{tcboxeditemize}
+}%
+%=======================================================
+%%%%%%%%%%%% STYLES FONDAMENTAUX %%%%%%%%%%%%%%%%%%%%%%%
+%---------------------------------------------------------
+
+%%%%%%%%%%%%%%% Begin Maquette %%%%%%%
+\NewDocumentEnvironment{Maquette}{om}{%
+  % on remet à zéro le compteur des exercices
+  \setcounter{PfMExo}{0}%
+  \setcounter{PfMExoCatalogue}{0}%
+  \PfMSelectionActivefalse% le tirage précédent (s'il y en a eu un) ne s'applique pas ici
+  % nouvelles valeurs.
+  \stepcounter{Maquette}%
+  % options de boulot
+
+  \useKVdefault[Boulot]%
+  \setKV[Boulot]{#1}%
+
+          \ifboolKV[Boulot]{DM}{%
+            \setKV[DM]{#2}\TikzDM%
+            \let\exercice\exerciceDM
+            \let\endexercice\endexerciceDM}%
+          {%
+            \ifboolKV[Boulot]{Fiche}{%
+              \setKV[Fiche]{#2}\TikzFiche%
+              \let\exercice\exerciceFiche
+              \let\endexercice\endexerciceFiche}%
+            {%
+              \ifboolKV[Boulot]{DS}{%
+                \setKV[DS]{#2}\TikzDS%
+                \let\exercice\exerciceDS
+                \let\endexercice\endexerciceDS}%
+              {%
+              \ifboolKV[Boulot]{DevS}{%
+                \setKV[DS]{#2}\TikzDevS%
+                \let\exercice\exerciceDS
+                \let\endexercice\endexerciceDS}%
+              {%
+		 \ifboolKV[Boulot]{Exam}{%
+            \setKV[Exam]{#2}\TikzExam%
+            \let\exercice\exerciceDS
+            \let\endexercice\endexerciceDS}%
+            {%
+            \ifboolKV[Boulot]{Olym}{%
+            \setKV[Olym]{#2}\TikzOlym%
+            \let\exercice\exerciceDS
+            \let\endexercice\endexerciceDS}%
+          {}%
+}}}}}}{%
+    \PfMAfficherExercicesPermutes  % ← AJOUT
+  \edef\@currentlabel{\thePfMExoCatalogue}%
+  \label{PfMFinMaquette\theMaquette}%
+}%    
+%%%%%%%%%%%%%%%%%%% End Maquette %%%%%%%%%%%%%%% 
+
+
+%---------- \anserdotline[number lines][distance] mode texte ------
+
+\NewDocumentCommand\anserdotline{O{1}o}{%
+  \foreach \PfMn in {1,...,#1}{%
+    \IfNoValueTF{#2}%
+      {\answerlinetoeol}%
+      {\answerlinetowidth[#2]}%
+    \par\vspace{10pt}%
+  }%
+}%
+
+\newcommand\answerlinetowidth[1][0pt]{%
+  \leavevmode
+  \hbox to #1{\leaders\hbox to \answerdotsep{\hss{\color{gray!85}.}\hss}\hskip 0pt plus 1fill}%
+}%
+
+\newcommand\answerlinetoeol{%
+  \leavevmode
+  \leaders\hbox to \answerdotsep{\hss{\color{gray!85}.}\hss}\hskip 0pt plus 1fill\strut
+}%
+
+\newcommand\answerdotsep{6pt}%
+%---------------------------------------------------------
+%------------------    -----------    --------------------
+%-----\cdotsx{nombre_de_points} mode maths ----------------
+\newcommand*{\cdotsx}[1][6]{%
+  \mathinner{\mskip 3mu \PfM@cdotsx@repeat{#1}\mskip 3mu}%
+}%
+
+\newcommand*{\PfM@cdotsx@repeat}[1]{%
+  \ifnum#1>0
+    \foreach \PfMi in {1,...,#1}{%
+      \color{gray!85!black}\ldotp\kern 1pt\mathpunct{}%
+    }%
+  \fi
+}%
+
+%----------------------------------------------------------
+  %-----------anserline[5]----------------------------------      
+        \newcommand{\anserline}[1][1]{%
+        \def\xhrulefill{\leavevmode\leaders\hrule height 0.5pt \hfill\kern 0pt}
+    \foreach \n in {1,...,#1}{%
+        {\color{gray!85}\xhrulefill\par\vspace{1em}}}}%
+        
+%--------------------------------------------------
+%\anspage{1} ajouter une seul page%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\anserpage}[1][25]{%
+	\newpage
+	 \begin{center}
+            \begin{tcolorbox}[enhanced,colback=white,colframe=black]
+            {\begin{center}\large \textbf{ADDITIONAL ANSWER PAGE:} Clearly number each question\end{center}}
+            \end{tcolorbox}
+        \end{center}
+        \vspace{5pt}
+    \foreach \n in {1,...,#1}{%
+        \vspace{5pt}
+        \anserdotline
+         }}%
+%----------------------------------------------
+%---------- \tr[3] une ligne de réponse -------------------
+\newcommand{\tr}[1][5]{
+\textcolor{gray}{\rule[-1pt]{\fpeval{#1}em}{0.5pt}}%
+}
+%--------------------------------------------------------
+%%=================================================
+%% Chargement optionnel des modules ProfModels
+%%=================================================
+%
+\ifProfLoadStyle
+  \RequirePackage{ProfModelsStyles}
+\fi
+
+\ifProfLoadFigure
+  \RequirePackage{FigMath}
+\fi
+
+\ifProfLoadDiagram
+  \RequirePackage{Diagrammes}
+\fi
+%
+%
+%===========================================
+%=====================================================
+% PERMUTATION + CHOIX COMPATIBLES
+%=====================================================
+
+\ExplSyntaxOn
+
+%------------------------------------------------------
+% Variables
+%------------------------------------------------------
+\bool_new:N  \g__pfm_perm_active_bool
+\int_new:N   \g__pfm_perm_count_int     
+\int_new:N   \g__pfm_perm_raw_int       
+\seq_new:N   \g__pfm_perm_order_seq     
+\seq_new:N   \l__pfm_perm_seen_seq     
+\tl_new:N    \l__pfm_exo_body_tl    
+
+\cs_new_eq:NN \PfMExerciceOriginal    \scan_stop:
+\cs_new_eq:NN \PfMEndExerciceOriginal \scan_stop:
+
+%------------------------------------------------------
+% \permuteExercices{3,1,5,2,4}
+%   Les indices réfèrent à la POSITION parmi les exercices
+%   effectivement retenus (après \ChoisirExercices).
+%------------------------------------------------------
+\NewDocumentCommand{\permuteExercices}{m}{%
+    \seq_gset_split:Nnn \g__pfm_perm_order_seq { , } { #1 }
+    \int_gzero:N \g__pfm_perm_count_int
+    \int_gzero:N \g__pfm_perm_raw_int
+    \bool_gset_true:N \g__pfm_perm_active_bool
+	%
+    % sauvegarder l'environnement exercice actif
+    \cs_gset_eq:NN \PfMExerciceOriginal    \exercice
+    \cs_gset_eq:NN \PfMEndExerciceOriginal \endexercice
+	%
+    % remplacer par la version stockante
+    \cs_gset_eq:NN \exercice    \PfMExerciceStocke
+    \cs_gset_eq:NN \endexercice \endPfMExerciceStocke
+  }%
+\let\PermuteExercices\permuteExercices
+
+%------------------------------------------------------
+% Environnement interne : stocke chaque exercice,
+% en respectant le filtrage de \ChoisirExercices et Print
+%------------------------------------------------------
+\NewDocumentEnvironment{PfMExerciceStocke}{ O{} +b }{%
+    \int_gincr:N \g__pfm_perm_raw_int
+   % 
+    \useKVdefault[ClesExercices]%
+    \setKV[ClesExercices]{#1}%
+    \PfM@VerifierAffichage
+    %
+    \ifPfMAfficherExo
+      \int_gincr:N \g__pfm_perm_count_int
+      %
+      % Nettoyer le corps : supprimer espaces en début/fin
+      \tl_set:Nn \l__pfm_exo_body_tl {#2}%
+      \tl_trim_spaces:N \l__pfm_exo_body_tl
+      \cs_gset_protected:cpx
+        { PfMStoredExo@
+          \int_use:N \c@Maquette @
+          \int_use:N \g__pfm_perm_count_int }
+        {%
+          \exp_not:N \PfMExerciceOriginal [\exp_not:n{#1}]%
+            \exp_not:V \l__pfm_exo_body_tl%
+          \exp_not:N \PfMEndExerciceOriginal
+        }%
+    \fi
+  }%
+  {}%
+%------------------------------------------------------
+% Affichage dans l'ordre permuté
+%------------------------------------------------------
+\cs_new_protected:Npn \PfMAfficherExercicesPermutes{%
+    \bool_if:NT \g__pfm_perm_active_bool
+      {
+        % Restaurer l'environnement AVANT d'afficher
+        \cs_gset_eq:NN \exercice    \PfMExerciceOriginal
+        \cs_gset_eq:NN \endexercice \PfMEndExerciceOriginal
+        % Réinitialiser le compteur d'exercices pour la numérotation
+        \setcounter{PfMExo}{0}
+        % Réinitialiser le catalogue pour que la vérification
+        % à l'intérieur des exercices originaux fonctionne
+        \setcounter{PfMExoCatalogue}{0}
+        % Désactiver temporairement la sélection pour l'affichage
+        % (le filtrage a déjà été fait au stockage)
+        \bool_set_false:N \l_tmpa_bool
+        \ifPfMSelectionActive
+          \bool_set_true:N \l_tmpa_bool
+        \fi
+        \PfMSelectionActivefalse
+        \seq_clear:N \l__pfm_perm_seen_seq
+        % --- Afficher dans l'ordre demandé ---
+        \seq_map_inline:Nn \g__pfm_perm_order_seq
+          {
+            \tl_set:Nn \l_tmpa_tl { ##1 }
+            \tl_trim_spaces:N \l_tmpa_tl
+            % Vérifier les doublons
+            \seq_if_in:NVTF \l__pfm_perm_seen_seq \l_tmpa_tl
+              {
+                \PackageWarning{ProfModels}
+                  { Exercice~ \tl_use:N \l_tmpa_tl \c_space_tl
+                    demande~ deux~ fois~ dans~
+                    \token_to_str:N \permuteExercices }
+              }%
+              {
+\seq_put_right:NV \l__pfm_perm_seen_seq \l_tmpa_tl
+              }%
+            % Afficher s'il existe
+            \cs_if_exist:cTF
+              { PfMStoredExo@
+                \int_use:N \c@Maquette @
+                \tl_use:N \l_tmpa_tl }
+              {
+                \use:c { PfMStoredExo@
+                  \int_use:N \c@Maquette @
+                  \tl_use:N \l_tmpa_tl }
+              }%
+              {%
+                \PackageWarning{ProfModels}
+                  { Exercice~ \tl_use:N \l_tmpa_tl \c_space_tl
+                    inexistant~ (seulement~
+      \int_use:N \g__pfm_perm_count_int \c_space_tl
+                    exercices~ retenus~ apres~ filtrage) }
+              }%
+          }%
+        % --- Avertir pour les exercices oubliés ---
+        \int_step_inline:nn { \g__pfm_perm_count_int }
+          {
+            \tl_set:Nx \l_tmpb_tl { \int_eval:n {##1} }
+            \seq_if_in:NVF \l__pfm_perm_seen_seq \l_tmpb_tl
+              {
+                \PackageWarning{ProfModels}
+{ Exercice~ retenu~ \tl_use:N \l_tmpb_tl \c_space_tl
+non~ mentionne~ dans~\token_to_str:N \permuteExercices ;~
+                    il~ ne~ sera~ pas~ affiche }%
+              }%
+          }%
+        % Restaurer l'état de sélection
+        \bool_if:NT \l_tmpa_bool { \PfMSelectionActivetrue }
+        \bool_gset_false:N \g__pfm_perm_active_bool
+      }%
+  }%
+
+\NewDocumentCommand{\AfficherExercicesPermutes}{}
+  { \PfMAfficherExercicesPermutes }
+
+%------------------------------------------------------
+% Debug : voir combien d'exercices ont été retenus
+%------------------------------------------------------
+\NewDocumentCommand{\NbExercicesRetenus}{}
+  { \int_use:N \g__pfm_perm_count_int }
+
+\ExplSyntaxOff
+%==================== END PERMUTATION ================
+\endinput

@@ -1,0 +1,354 @@
+\ProvidesPackage{FigMath}
+[2026/08/18 v1.06 Extension permettant de creer des figures mathematiques]
+
+\@ifpackageloaded{xparse}{}{\RequirePackage{xparse}}
+\RequirePackage{tkz-base}
+\RequirePackage[lua]{tkz-euclide}
+
+\ExplSyntaxOn
+\NewDocumentCommand{\figsetdefault}{ m m m }
+  {
+    \tl_if_blank:nTF {#1}
+      { \def#3{#2} }
+      { \def#3{#1} }
+  }
+
+\cs_generate_variant:Nn \clist_item:nn { o }
+
+\NewExpandableDocumentCommand{\figlabelitem}{ m m }
+  {
+    \clist_item:on {#1} {#2}
+  }
+
+\ExplSyntaxOff
+
+% ==============================================================
+%                       FIGURES 3D
+% ==============================================================
+
+% --------------------------------------------------------------
+% \cylindre[arc][labels]{rayon}{hauteur}
+% --------------------------------------------------------------
+
+\NewDocumentCommand{\cylindre}{ O{} O{} m m }{%
+  \figsetdefault{#1}{0.5}{\figArc}%
+  \figsetdefault{#2}{O}{\figLbls}%
+  \def\figR{#3}%
+  \def\figH{#4}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](0,\figH){\figLbls Oh}
+  \tkzDefPoint(\figR,0){\figLbls ptA}
+  \tkzDefPoint(-\figR,0){\figLbls ptC}
+  \tkzDefShiftPoint[\figLbls ptA](0,\figH){\figLbls ptAh}
+  \tkzDefShiftPoint[\figLbls ptC](0,\figH){\figLbls ptCh}
+
+  \tkzDrawSegments[thick](\figLbls ptC,\figLbls ptCh \figLbls ptA,\figLbls ptAh)
+
+  \tkzDrawEllipse[thick](\figLbls Oh,\figR cm,\figArc cm,0)
+
+  \begin{scope}
+    \clip (-\figR-0.1,0) rectangle (\figR+0.1,\figArc+0.1);
+    \tkzDrawEllipse[dashed](\figlabelitem{\figLbls}{1},\figR cm,\figArc cm,0)
+  \end{scope}
+
+  \begin{scope}
+    \clip (-\figR-0.1,-\figArc-0.1) rectangle (\figR+0.1,0);
+    \tkzDrawEllipse[thick](\figlabelitem{\figLbls}{1},\figR cm,\figArc cm,0)
+  \end{scope}
+
+  \tkzDrawPoint(\figlabelitem{\figLbls}{1})
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+}
+
+% --------------------------------------------------------------
+% \cube[angle][labels]{longueur}{hauteur}
+% --------------------------------------------------------------
+\NewDocumentCommand{\cube}{ O{} O{} m m }{%
+  \figsetdefault{#1}{50}{\figAngle}%
+  \figsetdefault{#2}{A,B,C,D,E,F,G,H}{\figLbls}%
+  \def\figL{#3}%
+  \def\figH{#4}%
+  \pgfmathsetmacro{\figHalfL}{0.5*(#3)}%
+  \pgfmathsetmacro{\figNegL}{-1*(#3)}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figL,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figHalfL){\figlabelitem{\figLbls}{3}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{3}](\figNegL,0){\figlabelitem{\figLbls}{4}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](0,\figH){\figlabelitem{\figLbls}{5}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](0,\figH){\figlabelitem{\figLbls}{6}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{3}](0,\figH){\figlabelitem{\figLbls}{7}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{4}](0,\figH){\figlabelitem{\figLbls}{8}}
+
+  \pgfmathparse{\figAngle < 90}
+  \ifdim\pgfmathresult pt>0.5pt
+    \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{6})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{6},\figlabelitem{\figLbls}{5})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{1})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{8})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{8},\figlabelitem{\figLbls}{7})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{7},\figlabelitem{\figLbls}{6})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{7})
+    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{8},\figlabelitem{\figLbls}{4})
+    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{4})
+    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{3})
+  \else
+    \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{6},\figlabelitem{\figLbls}{5})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{6})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{6},\figlabelitem{\figLbls}{7})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{1})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{7},\figlabelitem{\figLbls}{8})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{8})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{5})
+    \tkzDrawSegment(\figlabelitem{\figLbls}{8},\figlabelitem{\figLbls}{5})
+    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{7},\figlabelitem{\figLbls}{3})
+    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{3})
+    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{2})
+  \fi
+
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{6}){\figlabelitem{\figLbls}{6}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{7}){\figlabelitem{\figLbls}{7}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{8}){\figlabelitem{\figLbls}{8}}
+}
+
+% --------------------------------------------------------------
+% \prisme[angle][labels]{base}{hauteur}{angle1}{angle2}
+% --------------------------------------------------------------
+\NewDocumentCommand{\prisme}{ O{} O{} m m m m }{%
+  \figsetdefault{#1}{25}{\figAngle}%
+  \figsetdefault{#2}{A,B,C,E,F,G}{\figLbls}%
+  \def\figBase{#3}%
+  \def\figH{#4}%
+  \def\figAngA{#5}%
+  \def\figAngB{#6}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefTriangle[two angles={\figAngA} and {\figAngB}](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+  \tkzGetPoint{\figlabelitem{\figLbls}{3}}
+
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figH){\figlabelitem{\figLbls}{4}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figH){\figlabelitem{\figLbls}{5}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{3}](\figAngle:\figH){\figlabelitem{\figLbls}{6}}
+
+  \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{1})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{5})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{6})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{6})
+  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{4})
+  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{6})
+  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{5})
+
+  \tkzLabelPoint[below left](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[left](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+  \tkzLabelPoint[right](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{6}){\figlabelitem{\figLbls}{6}}
+}
+
+% --------------------------------------------------------------
+% \pyramide[angle][labels]{base}{angleSommet1}{angleSommet2}
+% --------------------------------------------------------------
+\NewDocumentCommand{\pyramide}{ O{} O{} m m m }{%
+  \figsetdefault{#1}{30}{\figAngle}%
+  \figsetdefault{#2}{A,B,C,D,S}{\figLbls}%
+  \def\figBase{#3}%
+  \pgfmathsetmacro{\figProf}{0.75*(#3)}%
+  \def\figSomA{#4}%
+  \def\figSomB{#5}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figProf){\figlabelitem{\figLbls}{3}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figProf){\figlabelitem{\figLbls}{4}}
+  \tkzDefTriangle[two angles={\figSomA} and {\figSomB}](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+  \tkzGetPoint{\figlabelitem{\figLbls}{5}}
+
+  \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{5})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{2})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{1})
+  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{4})
+  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{4})
+  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{3})
+
+  \tkzLabelPoint[below left](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[right](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[above left](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
+}
+
+% --------------------------------------------------------------
+% \tetra[angle][labels]{base}{angleSommet1}{angleSommet2}
+% --------------------------------------------------------------
+\NewDocumentCommand{\tetra}{ O{} O{} m m m }{%
+  \figsetdefault{#1}{30}{\figAngle}%
+  \figsetdefault{#2}{A,B,C,S}{\figLbls}%
+  \def\figBase{#3}%
+  \pgfmathsetmacro{\figProf}{0.5*(#3)}%
+  \def\figSomA{#4}%
+  \def\figSomB{#5}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figProf){\figlabelitem{\figLbls}{3}}
+  \tkzDefTriangle[two angles={\figSomA} and {\figSomB}](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+  \tkzGetPoint{\figlabelitem{\figLbls}{4}}
+
+  \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{2})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{1})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{3})
+  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})
+
+  \tkzLabelPoint[left](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[right](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+}
+
+% ==============================================================
+%                    FIGURES PLANES
+% ==============================================================
+
+% --------------------------------------------------------------
+% \carre[labels]{cote}
+% --------------------------------------------------------------
+\NewDocumentCommand{\carre}{ O{} m }{%
+  \figsetdefault{#1}{A,B,C,D}{\figLbls}%
+  \def\figC{#2}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figC,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](90:\figC){\figlabelitem{\figLbls}{3}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](90:\figC){\figlabelitem{\figLbls}{4}}
+
+  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4})
+
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+}
+
+% --------------------------------------------------------------
+% \rectangle[labels]{longueur}{largeur}
+% --------------------------------------------------------------
+\NewDocumentCommand{\rectangle}{ O{} m m }{%
+  \figsetdefault{#1}{A,B,C,D}{\figLbls}%
+  \def\figL{#2}%
+  \def\figH{#3}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figL,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](90:\figH){\figlabelitem{\figLbls}{3}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](90:\figH){\figlabelitem{\figLbls}{4}}
+
+  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4})
+
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+}
+
+% --------------------------------------------------------------
+% \parallelogramme[angle][labels]{base}{cote}
+% --------------------------------------------------------------
+\NewDocumentCommand{\parallelogramme}{ O{} O{} m m }{%
+  \figsetdefault{#1}{60}{\figAngle}%
+  \figsetdefault{#2}{A,B,C,D}{\figLbls}%
+  \def\figBase{#3}%
+  \def\figCote{#4}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figCote){\figlabelitem{\figLbls}{4}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figCote){\figlabelitem{\figLbls}{3}}
+
+  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4})
+
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+}
+
+% --------------------------------------------------------------
+% \losange[angle][labels]{cote}
+% --------------------------------------------------------------
+\NewDocumentCommand{\losange}{ O{} O{} m }{%
+  \figsetdefault{#1}{50}{\figAngle}%
+  \figsetdefault{#2}{A,B,C,D}{\figLbls}%
+  \def\figCote{#3}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figCote,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figCote){\figlabelitem{\figLbls}{4}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figCote){\figlabelitem{\figLbls}{3}}
+
+  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4})
+
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+}
+
+% --------------------------------------------------------------
+% \Triangle[angleA][labels]{base}{angleB}
+% --------------------------------------------------------------
+\NewDocumentCommand{\Triangle}{ O{} O{} m m }{%
+  \figsetdefault{#1}{60}{\figAngleA}%
+  \figsetdefault{#2}{A,B,C}{\figLbls}%
+  \def\figBase{#3}%
+  \def\figAngleB{#4}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
+  \tkzDefTriangle[two angles={\figAngleA} and {\figAngleB}](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+  \tkzGetPoint{\figlabelitem{\figLbls}{3}}
+
+  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
+
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+}
+
+% --------------------------------------------------------------
+% \cercle[angle][labels]{rayon}
+% --------------------------------------------------------------
+\NewDocumentCommand{\cercle}{ O{} O{} m }{%
+  \figsetdefault{#1}{30}{\figAngle}%
+  \figsetdefault{#2}{O,A}{\figLbls}%
+  \def\figR{#3}%
+
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figR){\figlabelitem{\figLbls}{2}}
+
+  \draw (\figlabelitem{\figLbls}{1}) circle (\figR cm);
+  \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
+  \tkzDrawPoint(\figlabelitem{\figLbls}{1})
+  \tkzDrawPoint(\figlabelitem{\figLbls}{2})
+
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[above right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+}
+%==============================================================
+\endinput

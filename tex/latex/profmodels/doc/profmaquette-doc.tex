@@ -1,0 +1,967 @@
+% with lualatex
+\documentclass[12pt,french]{article}
+\usepackage[nonamssymb]{ProfCollege}
+\usepackage{ProfMaquette}
+\input{Christ7}
+\usepackage[warnings-off={mathtools-colon,mathtools-overbracket}]{unicode-math}
+\usepackage{fourier-otf}
+\usepackage[a4paper,margin=1.5cm,nohead,includefoot]{geometry}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+\usepackage{mflogo}
+\usepackage{babel}
+
+\def\MPclipOne#1#2#3{
+  \begin{mplibcode}
+    vardef paired (expr d) =
+    if pair d : d else : (d,d) fi
+    enddef ;
+    
+    primarydef p xyscaled q =
+    begingroup ; save qq ; pair qq ; qq = paired(q) ;
+    ( p
+    if xpart qq<>0 : xscaled (xpart qq) fi
+    if ypart qq<>0 : yscaled (ypart qq) fi )
+    endgroup
+    enddef ;
+    
+    path fullsquare;
+    fullsquare := unitsquare shifted - center unitsquare ;
+    
+    color myyellow;
+    myyellow = (242/255,226/255,149/255);
+    
+    path p; p := fullsquare xyscaled (#1,#2);% squeezed #3;
+
+    %fill (point(0) of p)--(point(1) of p)--(point(2) of p)--(point(3) of p)--cycle;
+    pair pp;
+    pp=0.5[point(0) of p,point(2) of p];
+    height=2pt;
+    width=2pt;
+    p:=(point(0) of p)--(point(1) of p)--(point(2) of p);
+
+    p:=(1/3[point(0) of p,point(1) of p])--(point(1) of p)--(2/3[point(1) of p,point(2) of p]);% withpen pencircle scaled 2bp;
+    z1=point(0) of p;
+    x2=x12=xpart(point(length p/6) of p);
+    x3=x11=xpart(point(2*length p/6) of p);
+    x4=xpart(point(3*length p/6) of p)+width;
+    x5=x4-(width/3);
+    x6=x4-(2*width/3);
+    x7=xpart(point(length p) of p);
+    x8=x7-(width/3);
+    x9=x7-(2*width/3);
+    x10=x7-width;
+    y2=ypart(point(length p/6) of p)-(height/3);
+    y3=ypart(point(2*length p/6) of p)-(2*height/3);
+    y4=ypart(point(3*length p/6) of p)-height;
+    y12=ypart(point(length p/6) of p)+(height/3);
+    y11=ypart(point(2*length p/6) of p)+(2*height/3);
+    y10=ypart(point(3*length p/6) of p)+height;
+    y5=y9=ypart(point(4*length p/6) of p);
+    y6=y8=ypart(point(5*length p/6) of p);
+    y7=ypart(point(length p) of p);
+    fill z1--z2--cycle--z3--z4--z5--z6--z7--z8--z9--z10--z11--z12--cycle;% withcolor 0.85myyellow;
+    fill (z1--z2--cycle--z3--z4--z5--z6--z7--z8--z9--z10--z11--z12--cycle) rotatedabout(pp,180);% withcolor 0.85myyellow;
+  \end{mplibcode}
+}
+
+\newsavebox{\tacochapterbox}
+
+\newcommand{\Tacoo}[1]{%
+  \begin{lrbox}{\tacochapterbox}
+    #1%
+  \end{lrbox}
+  \ooalign{%
+    \MPclipOne{\mpdim{\wd\tacochapterbox+1pc}}% width
+    {\mpdim{\ht\tacochapterbox+\dp\tacochapterbox+1pc}}% height
+    {0pt}% thickness of the curve
+    \cr\kern0.5pc\raisebox{\ht\tacochapterbox\relax}{\usebox\tacochapterbox}%
+  }
+}
+
+\NewDocumentEnvironment{CadreMP}{+b}{%
+  \begin{lrbox}{\tacochapterbox}
+    \begin{minipage}{0.97\linewidth}
+      #1%
+    \end{minipage}
+  \end{lrbox}
+  \par
+  \ooalign{%
+    \MPclipOne{\mpdim{\wd\tacochapterbox+1pc}}% width
+    {\mpdim{\ht\tacochapterbox+\dp\tacochapterbox+1pc}}% height
+    {0pt}% thickness of the curve
+    \cr\kern0.5pc\raisebox{\ht\tacochapterbox\relax}{\usebox\tacochapterbox}%
+  }%
+}{}%
+
+\usepackage{pdfpages}
+
+\title{Factoriser la production de documents}
+\author{C.Poulain}
+\date{\PfMfiledate}
+
+\usepackage[colorlinks=true,linkcolor=purple]{hyperref}
+
+\pagestyle{empty}
+
+\usepackage{listings}
+\lstset{
+    language     = [LaTeX]TeX,
+    basicstyle   = \ttfamily,%
+    breaklines = true,
+    commentstyle = \footnotesize\slshape\color{gray},
+    emphstyle=\color{purple},
+    columns=fullflexible,%
+    frame=tb,%
+    texcsstyle=*\color{black},%pour colorer la contre-oblique
+    classoffset=5,
+    texcsstyle=*\color{blue},%pour colorer la contre-oblique
+    moretexcs={brm,TikzDM,TikzDS,TikzIE,TikzFiche,Competences,TikzParcours,TikzPdT,PfMCompNA,PfMCompECA,PfMCompA,AfficheParcours},
+    emph={Maquette,exercice,Solution,Reponse,Indice},%
+    classoffset=1,
+    keywords={DM,DS,IE,Fiche,CorrigeFin,CorrigeApres,PdT,Parcours,ParcoursPerso},
+    keywordstyle=\color{OliveDrab},
+    classoffset=2,
+    keywords={Theme,Niveau,Classe,Date,Calculatrice,Code,Numero,Sujet,Nom,NumSujet,Fichier,Type},
+    keywordstyle=\color{BlueViolet},%DarkMagenta},
+    classoffset=3,
+    keywords={Pouce,Direct,PasCorrige,BaremeDetaille,BaremeTotal,Source,Titre,Oral,Calculatrice,Competence,Trajet},
+    keywordstyle=\color{DarkGreen},
+%    delim        = **[s][\color{purple}]{$}{$},
+%    moredelim    = **[s][\color{purple}]{\\[}{\\]},
+%    moredelim    = **[is][\color{black}]{\\Z}{\\Z},
+    literate=*{[}{{\textcolor{orange}{[}}}{1}
+    {]}{{\textcolor{orange}{]}}}{1}
+    {\{}{\textcolor{amber}{\{}}{1}
+    {\}}{\textcolor{amber}{\}}}{1}
+    {\&}{\textcolor{red}{\&}}{1}
+    {\\[}{{\textcolor{purple}{\textbackslash[}}}{2}
+    {\\]}{{\textcolor{purple}{\textbackslash]}}}{2}
+    {$}{{\textcolor{purple}{\$}}}{1}%$
+    {_}{{\textcolor{purple}{\_}}}{1}%
+    {^}{{\textcolor{purple}{\^{}}}}{1}%,
+}
+
+% "Rehook" delimiters char table.
+\makeatletter
+\lst@AddToHook{SelectCharTable}{\lst@DefDelims}
+\makeatother
+
+\usepackage{textcomp}%pour les < de listings
+\usepackage{enumerate}
+\usepackage{hhline}
+\usepackage{pifont}
+
+\definecolor{mygray}{RGB}{245,245,245}%pour le background de listing
+\definecolor{drab}{rgb}{0.59, 0.44, 0.09}
+\definecolor{amber}{rgb}{1.0, 0.75, 0.0}
+\definecolor{chocolate}{rgb}{0.82, 0.41, 0.12}
+\colorlet{amber}{chocolate}
+
+\newtcblisting{Codes}[3][]{%
+  top=0mm,bottom=0mm,left=2mm,right=2mm,middle=0mm,%
+  colback=white,%
+  colframe=white!75!black,%
+  every listing line={#3},%
+  listing options={%
+    frame=,%
+    backgroundcolor=,%
+  },%
+  righthand width=#2\linewidth,%
+  #1%
+}%
+
+\usepackage{menukeys}
+\newcommand\metamk[1]{\textlangle#1\textrangle}
+
+\newcommand\Cle[1]{%
+  {\sffamily\textlangle #1\textrangle}%
+}%
+
+\newcommand{\Defaut}[1]{%
+\hfill valeur par défaut : {\sffamily #1}\par%
+}%
+
+\usepackage{parskip}
+
+\newenvironment{Description}
+               {\list{}{\labelwidth0pt \leftmargin0pt \itemindent-\leftmargin
+                        \let\makelabel\Descriptionlabel}}
+               {\endlist}
+\newcommand*\Descriptionlabel[1]{\hspace\labelsep
+                                \normalfont\bfseries #1}
+
+\parindent0pt
+
+\newcommand\TIKZ{Ti\textit{k}Z}
+
+\renewcommand\TikzDM{%
+  \begin{tcolorbox}[frame hidden,colback=white,enhanced,%
+    borderline north={3pt}{0pt}{gray!85},
+    borderline north={2pt}{0.5pt}{gray!15},
+    borderline south={3pt}{0pt}{gray!85},
+    borderline south={2pt}{0.5pt}{gray!15},
+    ]%
+    \sffamily Devoir en temps libre \no\useKV[DM]{Numero}\hfill\useKV[DM]{Niveau}\ieme{} \useKV[DM]{Classe}%
+    \par{\tiny\jobname}\hfill{\scriptsize Pour le \useKV[DM]{Date}}%
+  \end{tcolorbox}%
+}
+\renewcommand\TikzDS{%
+  \begin{tcolorbox}[colback=gray!5,%
+    enhanced,%
+    overlay unbroken and first={%
+      \node[yshift=1em] at (frame.south) {\scriptsize\sffamily-- Calculatrice \ifboolKV[DS]{Calculatrice}{autorisée}{interdite} --};
+    }
+    ]%
+    \sffamily Devoir surveillé \no\useKV[DS]{Numero} (Sujet \useKV[DS]{Sujet})\hfill\useKV[DS]{Niveau}\ieme{} \useKV[DS]{Classe}
+    \par{\tiny\jobname}\hfill{\scriptsize\useKV[DS]{Date}}
+  \end{tcolorbox}%
+}
+\renewcommand\TikzIE{%
+  \begin{minipage}{0.6\linewidth}
+    \begin{tcolorbox}[colback=gray!5,
+      enhanced,%
+      overlay unbroken and first={%
+        \node[yshift=1em] at (frame.south) {\scriptsize\sffamily-- Calculatrice \ifboolKV[IE]{Calculatrice}{autorisée}{interdite} --};
+      }
+      ]%
+      \sffamily \useKV[IE]{Nom} \no\useKV[IE]{Numero} : \useKV[IE]{Theme} \ifboolKV[IE]{Sujets}{\scriptsize(Sujet \useKV[IE]{NumSujet})}{}
+      \vspace{1em}
+      \par{\tiny\jobname}\hfill{\scriptsize\useKV[DS]{Date}}
+    \end{tcolorbox}%
+  \end{minipage}\hfill\begin{minipage}{0.35\linewidth}
+    Nom : \dotfill\\[0.5em]
+    Prénom : \dotfill\\[0.5em]
+    Classe : \dotfill
+  \end{minipage}
+  \par\bigskip
+}
+
+\renewcommand\TikzFiche{%
+  \begin{tcolorbox}[%spread outwards=-1cm,spread inwards=-1cm,
+    colback=gray!5]%
+  \Large\sffamily \useKV[Fiche]{Theme}\hfill\useKV[Fiche]{Niveau}\ieme{} \useKV[Fiche]{Classe}
+  \par{\tiny\jobname}\hfill{\scriptsize\useKV[Fiche]{Date}}
+  \end{tcolorbox}%
+}
+
+\renewcommand\TikzParcours{%
+  \begin{tcolorbox}[%spread outwards=-1cm,spread inwards=-1cm,
+    colback=gray!5]%
+    \Large\sffamily \useKV[Parcours]{Theme}\hfill\useKV[Parcours]{Niveau} \useKV[Parcours]{Classe}%
+    \par{\tiny\useKV[Parcours]{Code}}\hfill{\scriptsize\useKV[Parcours]{Date}}%
+  \end{tcolorbox}%
+}
+
+\renewcommand\TikzPdT{%
+  \begin{tcolorbox}[%spread outwards=-1cm,spread inwards=-1cm,
+    colback=gray!5]%
+    \Large\sffamily \useKV[PdT]{Theme}\hfill\useKV[PdT]{Niveau} \useKV[PdT]{Classe}%
+    \par{\tiny\useKV[PdT]{Code}}\hfill{\scriptsize\useKV[PdT]{Date}}%
+  \end{tcolorbox}%
+}
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+Après la création du package \lstinline!ProfCollege!, l'idée de poursuivre la factorisation des méthodes de travail a naturellement germé. Produire des fiches, des devoirs, des évaluations\dots{} avec des méthodes différentes, cela peut vite apparaître fastidieux. Créé pour améliorer cela, cet ensemble de macro-commandes est basé, quasi exclusivement, sur les environnements \lstinline!Maquette! et \lstinline!exercice! :
+\begin{itemize}
+\item l'environnement \lstinline!Maquette! indique le type de document souhaité et ses caractéristiques;
+\item l'environnement \lstinline!exercice! adapte la présentation et les fonctions des exercices en accord avec l'environnement \lstinline!Maquette!.
+\end{itemize}
+\clearpage
+\section*{L'environnement \lstinline!Maquette!}
+\begin{Codes}[listing only]{0.4}{}
+\begin{Maquette}
+      
+\end{Maquette}
+\end{Codes}
+C'est lui qui va indiquer :
+\begin{itemize}
+\item le type de document souhaité (Devoir Maison / Devoir Surveillé / Interrogatin écrite / Fiche d'exercices / Parcours d'exercices / Parcours personnalisé / Plan de travail);
+\item et si ce travail est corrigé (à la suite d'un exercice ou à la fin du document) ou pas;
+\end{itemize}
+puis il indiquera les caractéristiques du document souhaité.
+\clearpage
+\subsection*{Les devoirs maison}
+\begin{CadreMP}
+  \begin{Description}
+\item[La clé \Cle{DM}]\Defaut{false}
+  \begin{itemize}
+  \item[La clé \Cle{Numero}]\Defaut{1}
+  \item[La clé \Cle{Date}]\Defaut{\lstinline!\\today!}
+  \item[La clé \Cle{Classe}]\Defaut{\{\}}
+  \item[La clé \Cle{Niveau}]\Defaut{3}
+  \item[La clé \Cle{Code}\footnotemark]\Defaut{\{\}}
+  \end{itemize}
+\end{Description}
+\end{CadreMP}
+\footnotetext{Outil personnel de classement.}
+\begin{Codes}[]{0.4}{}
+\begin{Maquette}[DM]{Numero=3,Niveau=6,Classe=Zola,Date=25 décembre 2020}
+  On considère un triangle $ABC$\dots
+\end{Maquette}
+\end{Codes}
+\clearpage
+\subsection*{Les devoirs surveillés}
+\begin{CadreMP}
+  \begin{Description}
+\item[La clé \Cle{DS}]\Defaut{false}
+  \begin{itemize}
+  \item[La clé \Cle{Numero}]\Defaut{1}
+  \item[La clé \Cle{Date}]\Defaut{\lstinline!\\today!}
+  \item[La clé \Cle{Classe}]\Defaut{}
+  \item[La clé \Cle{Niveau}]\Defaut{3}
+  \item[La clé \Cle{Code}]\Defaut{}
+  \item[La clé \Cle{Calculatrice}] autorisée ou non\Defaut{false}
+  \item[La clé \Cle{Sujet}]\Defaut{A}
+  \end{itemize}
+\end{Description}
+\end{CadreMP}
+\begin{Codes}[]{0.4}{}
+\begin{Maquette}[DS]{Numero=3,Niveau=6,Classe=Zola,Date=25 décembre 2020}
+  On considère un triangle $ABC$\dots
+\end{Maquette}
+\end{Codes}
+\clearpage
+\subsection*{Les évaluations écrites}
+\begin{CadreMP}
+  \begin{Description}
+\item[La clé \Cle{IE}]\Defaut{false}
+  \begin{itemize}
+  \item[La clé \Cle{Numero}]\Defaut{1}
+  \item[La clé \Cle{Date}]\Defaut{\lstinline!\\today!}
+  \item[La clé \Cle{Classe}]\Defaut{}
+  \item[La clé \Cle{Niveau}]\Defaut{3}
+  \item[La clé \Cle{Code}]\Defaut{}
+  \item[La clé \Cle{Calculatrice}] autorisée ou nom\Defaut{false}
+  \item[La clé \Cle{Sujet}] pour de multiples sujets\Defaut{\{\}}
+  \item[La clé \Cle{Theme}] Thème de l'évaluation \Defaut{\{\}}
+  \item[La clé \Cle{Nom}] Pour changer le nom \og \'Evaluation\fg\Defaut{\'Evaluation}
+  \end{itemize}
+\end{Description}
+\end{CadreMP}
+\begin{Codes}[]{0.4}{}
+\begin{Maquette}[IE]{Numero=3,Niveau=6,Classe=Zola,Date=25 décembre 2020,Theme=La géométrie}%    
+  On considère un triangle $ABC$\dots
+\end{Maquette}
+\end{Codes}
+\clearpage
+\subsection*{Les fiches d'exercices}
+\begin{CadreMP}
+  \begin{Description}
+\item[La clé \Cle{Fiche}]\Defaut{false}
+  \begin{itemize}
+  \item[La clé \Cle{Date}]\Defaut{\lstinline!\\today!}
+  \item[La clé \Cle{Classe}]\Defaut{Nairobi}
+  \item[La clé \Cle{Niveau}]\Defaut{6}
+  \item[La clé \Cle{Theme}] Thème de la fiche \Defaut{Les nombres décimaux}
+  \item[La clé \Cle{Code}]\Defaut{}
+  \item[La clé \Cle{NomExercice}] pour modifier le nom des exercices\Defaut{Exercice}
+  \end{itemize}
+\end{Description}
+\end{CadreMP}
+\begin{Codes}[]{0.4}{}
+\begin{Maquette}[Fiche]{Niveau=6,Classe=Zola,Date=25 décembre 2020}
+  On considère un triangle $ABC$\dots
+\end{Maquette}
+\end{Codes}
+%\begin{Maquette}[Fiche]{Niveau=6,Classe=Zola,Date=25 décembre 2020}
+%  On considère un triangle $ABC$\dots
+%\end{Maquette}
+\clearpage
+\subsection*{Les parcours}
+\begin{CadreMP}
+  \begin{Description}
+\item[La clé \Cle{Parcours}\footnotemark]\Defaut{false}
+  \begin{itemize}
+  \item[La clé \Cle{Date}]\Defaut{\lstinline!\\today!}
+  \item[La clé \Cle{Classe}]\Defaut{Nairobi}
+  \item[La clé \Cle{Niveau}]\Defaut{6}
+  \item[La clé \Cle{Theme}] Thème du parcours \Defaut{Les nombres décimaux}
+  \item[La clé \Cle{Code}]\Defaut{}
+  \item[La clé \Cle{NomExercice}] pour modifier le nom des exercices\Defaut{Exercice}
+  \end{itemize}
+\end{Description}
+\end{CadreMP}
+  \footnotetext{Il dispose des même clés que la clé \Cle{Fiche} et de la même présentation. Ce n'est pas là son utilité\dots}
+\begin{Codes}[]{0.4}{}
+\begin{Maquette}[Parcours]{Niveau=6,Classe=Zola,Date=25 décembre 2020}
+  On considère un triangle $ABC$\dots
+\end{Maquette}
+\end{Codes}
+\clearpage
+\subsection*{Les parcours fléchés}
+\begin{CadreMP}
+  \begin{Description}
+\item[La clé \Cle{PdT}\footnotemark]\Defaut{false}
+  \begin{itemize}
+  \item[La clé \Cle{Date}]\Defaut{\lstinline!\\today!}
+  \item[La clé \Cle{Classe}]\Defaut{Nairobi}
+  \item[La clé \Cle{Niveau}]\Defaut{6}
+  \item[La clé \Cle{Theme}] Thème du plan de travail \Defaut{Les nombres décimaux}
+  \item[La clé \Cle{Code}]\Defaut{}
+  \item[La clé \Cle{NomExercice}] pour modifier le nom des exercices\Defaut{Exercice}
+  \end{itemize}
+\end{Description}
+\end{CadreMP}
+  \footnotetext{Il dispose des même clés que la clé \Cle{Fiche} et de la même présentation. Ce n'est pas là son utilité\dots}
+\begin{Codes}[]{0.4}{}
+\begin{Maquette}[PdT]{Niveau=6,Classe=Zola,Date=25 décembre 2020}
+  On considère un triangle $ABC$\dots
+\end{Maquette}
+\end{Codes}
+%\begin{Maquette}[PdT]{Niveau=6,Classe=Zola,Date=25 décembre 2020}
+%  On considère un triangle $ABC$\dots
+%\end{Maquette}
+\clearpage
+\subsection*{Les parcours personnalisés}
+\begin{CadreMP}
+  \begin{Description}
+\item[La clé \Cle{ParcoursPerso}]\Defaut{false}
+  \begin{itemize}
+  \item[La clé \Cle{Fichier}]\Defaut{}\par est le nom du fichier {\ttfamily csv} à utiliser pour créer les parcours personnalisés.
+  \end{itemize}
+\end{Description}
+\end{CadreMP}
+\begin{Codes}[listing only]{0.4}{}
+\begin{Maquette}[ParcoursPerso]{Fichier=Eleves}
+  On considère un triangle $ABC$\dots
+\end{Maquette}
+\end{Codes}
+\clearpage
+Comme on peut le voir, chaque type de travail est associé à une présentation. Ces présentations sont créées par les commandes\footnote{Qu'on peut donc redéfinir. Par exemple, c'est ce que j'ai fait dans ce document pour la commande \lstinline!\\TikzFiche! : elle ne commence plus une nouvelle page.} : \lstinline!\TikzDM/\TikzDMCor! pour la clé \Cle{DM}; \lstinline!\TikzDS/\TikzDSCor! pour la clé \Cle{DS}; \lstinline!\TikzIE/\TikzIECor! pour la clé \Cle{IE}; \lstinline!\TikzFiche/\TikzFicheCor! pour la clé \Cle{Fiche}, \lstinline!\TikzParcours/\TikzParcoursCor! pour la clé \Cle{Parcours} et \lstinline!\TikzPdT! pour la clé \Cle{PdT}.
+
+On dispose également de la commande \lstinline!\Competences! permettant de construire un tableau de\dots{} compétences données par l'utilisateur; les compétences étant séparées par le symbole \lstinline!/!.
+\begin{Codes}[]{0.4}{}
+\Competences{Utiliser le compas/Utiliser l'équerre}
+\end{Codes}
+Les notations \lstinline!NA!, \lstinline!ECA! et \lstinline!A! peuvent être redéfinies par les commandes \lstinline!\PfMCompNA!, \lstinline!\PfMCompECA! et \lstinline!\PfMCompA!.
+\begin{Codes}[]{0.4}{}
+\renewcommand\PfMCompNA{\rule{0pt}{3ex}\RKangry}
+\renewcommand\PfMCompECA{\RKsad}
+\renewcommand\PfMCompA{\RKbigsmile}
+\Competences{Utiliser le compas/Utiliser l'équerre}  
+\end{Codes}
+Si l'on souhaite davantage de niveaux d'évaluations (ou moins), on utilisera les codes suivants :
+\begin{Codes}[]{0.4}{}
+\Competences[4]{0§1§2§3/Utiliser le compas/Utiliser l'équerre}
+\end{Codes}
+\begin{Codes}[]{0.4}{}
+\Competences[2]{A§NA/Utiliser le compas/Utiliser l'équerre}
+\end{Codes}
+\clearpage
+\section*{L'environnement \lstinline!exercice!}
+\begin{Codes}[listing only]{0.4}{}
+\begin{exercice}
+      
+\end{exercice}
+\end{Codes}
+\subsection*{Habillage des exercices}
+L'envionnement \lstinline!exercice! doit {\em impérativement} être inclus dans un environnement \lstinline!Maquette! car le choix de document influence la présentation des exercices.
+\begin{Codes}[]{0.5}{}
+\begin{Maquette}[IE]{Theme=Les fonctions,Niveau=3,Classe=Gide}
+  \begin{exercice}
+    La fonction $f:x\mapsto3x+2$ est-elle une fonction affine ? Justifier.
+  \end{exercice}
+\end{Maquette}
+\end{Codes}
+\begin{Codes}[listing side text]{0.6}{}
+\begin{Maquette}[DM]{Numero=50,Niveau=3,Classe=Gide}
+  \begin{exercice}
+    La fonction $f:x\mapsto3x+2$ est-elle une fonction affine ? Justifier.
+  \end{exercice}
+\end{Maquette}
+\end{Codes}
+\begin{Codes}[listing side text]{0.6}{}
+\begin{Maquette}[DS]{Numero=50,Niveau=3,Classe=Gide}
+  \begin{exercice}
+    La fonction $f:x\mapsto3x+2$ est-elle une fonction affine ? Justifier.
+  \end{exercice}
+\end{Maquette}
+\end{Codes}
+\begin{Codes}[]{0.4}{}
+\begin{Maquette}[Fiche]{Theme=Les fonctions,Niveau=3,Classe=Gide}
+  \begin{exercice}
+    La fonction $f:x\mapsto3x+2$ est-elle une fonction affine ? Justifier.
+  \end{exercice}
+\end{Maquette}
+\end{Codes}
+%\begin{Maquette}[Fiche]{Theme=Les fonctions,Niveau=3,Classe=Gide}
+%  \begin{exercice}
+%    La fonction $f:x\mapsto3x+2$ est-elle une fonction affine ? Justifier.
+%  \end{exercice}
+%\end{Maquette}
+\subsection*{Le barème des exercices}
+On remarque que certains exercices sont associés à un total de point. C'est une des clés disponibles pour l'environnement \lstinline!exercice!. Voici celles pour les barèmes :
+\begin{Description}
+\item[La clé \Cle{BaremeTotal}] qui affichera, dans le coin supérieur droit, le total de points de l'exercice. La valeur de cette clé :
+  \begin{itemize}
+  \item est {\em fixée} à {\sffamily false} pour la clé \Cle{Fiche};
+  \item est positionnée à {\sffamily true} mais {\em modifiable} pour les clés \Cle{DM}, \Cle{DS} et \Cle{IE}.
+  \end{itemize}
+\item[La clé \Cle{BaremeDetaille}]\Defaut{false}\par qui a le même fonctionnement que la clé \Cle{BaremeTotal}.
+  La commande \lstinline!\brm{}! permet la construction du barème (détaillé et total).
+\item[La clé \Cle{MotPoint}]\Defaut{point}\par donnée sous forme de texte puisque le pluriel est géré.
+  \begin{Codes}[listing only]{0.4}{}
+\begin{Maquette}[DS]{Numero=3,Classe=Euler,Niveau=4}
+  \begin{exercice}  % ici le barème est total, pas de détail : comportement par défaut     
+    On considère les expressions $A=2x(3x+5)$ et $B=x(7x-1)$.
+    \begin{enumerate}
+    \item\brm{1} Développer l'expression $A$.
+    \item\brm{1.5} Développer l'expression $B$.
+    \end{enumerate}
+  \end{exercice}
+  \begin{exercice}[BaremeDetaille]  %ici le barème est total ET détaillé
+    On considère les expressions $A=2x(3x+5)$ et $B=x(7x-1)$.
+    \begin{enumerate}
+    \item\brm{1} Développer l'expression $A$.
+    \item\brm{1.5} Développer l'expression $B$.
+    \end{enumerate}
+  \end{exercice}
+\end{Maquette}
+\end{Codes}
+\begin{Maquette}[DS]{Numero=3,Classe=Euler,Niveau=4}
+  \begin{exercice}  % ici le barème est total, pas de détail : comportement par défaut     
+    On considère les expressions $A=2x(3x+5)$ et $B=x(7x-1)$.
+    \begin{enumerate}
+    \item\brm{1} Développer l'expression $A$.
+    \item\brm{1.5} Développer l'expression $B$.
+    \end{enumerate}
+  \end{exercice}
+  \begin{exercice}[BaremeDetaille]  %ici le barème est total ET détaillé
+    On considère les expressions $A=2x(3x+5)$ et $B=x(7x-1)$.
+    \begin{enumerate}
+    \item\brm{1} Développer l'expression $A$.
+    \item\brm{1.5} Développer l'expression $B$.
+    \end{enumerate}
+  \end{exercice}
+\end{Maquette}
+\end{Description}
+\clearpage
+\subsection*{Source, compétence et titre}
+Si on souhaite citer la source d'un exercice ou lui donner un titre, on dispose des clés :
+\begin{Description}
+\item[La clé \Cle{Source}] pour citer la source de l'exercice.\Defaut{\{\}}
+\item[La clé \Cle{Titre}] pour nommer un exercice.\Defaut{\{\}}
+\item[La clé \Cle{Competence}] pour indiquer une compétence associée à l'exercice.\Defaut{\{\}}
+\begin{Codes}[listing only]{0.4}{}
+\begin{Maquette}[Fiche]{Theme=Algorithmique}
+  \colorlet{PfMColCpt}{Crimson}
+  \colorlet{PfMColSrc}{NavyBlue}
+  \begin{exercice}[Source=Olympiades 2019,Titre=Modifier des mots,Competence=Raisonner]
+    Dans ce problème, on appellera {\em mot} toute suite de lettres formée des lettres A, D et G. Par exemple : ADD, A, AAADG sont des {\em mots}.
+    \\Astrid possède un logiciel qui fonctionne de la manière suivante : un utilisateur entre un {\em mot} et, après un clic sur EXÉCUTER, chaque lettre A du {\em mot} (s'il y en a) est remplacée par le {\em mot} AGADADAGA. Ceci donne un nouveau {\em mot}.\\Par exemple, si l'utilisateur rentre le {\em mot} AGA, on obtient le {\em mot} AGADADAGAGAGADADAGA. Un deuxième clic sur EXÉCUTER réitère la transformation décrite ci-dessus au nouveau {\em mot}, et ainsi de suite.
+    \begin{enumerate}
+    \item Quels sont les {\em mots} qui restent inchangés quand on clique sur EXÉCUTER ?
+    \end{enumerate}
+\end{exercice}
+\end{Maquette}
+\end{Codes}
+%\clearpage
+\begin{Maquette}[Fiche]{Theme=Algorithmique}
+  \colorlet{PfMColCpt}{Crimson}
+  \colorlet{PfMColSrc}{NavyBlue}
+  \begin{exercice}[Source=Olympiades 2019,Titre=Modifier des mots,Competence=Raisonner]
+    Dans ce problème, on appellera {\em mot} toute suite de lettres formée des lettres A, D et G. Par exemple : ADD, A, AAADG sont des {\em mots}.
+    \\Astrid possède un logiciel qui fonctionne de la manière suivante : un utilisateur entre un {\em mot} et, après un clic sur EXÉCUTER, chaque lettre A du {\em mot} (s'il y en a) est remplacée par le {\em mot} AGADADAGA. Ceci donne un nouveau {\em mot}.\\Par exemple, si l'utilisateur rentre le {\em mot} AGA, on obtient le {\em mot} AGADADAGAGAGADADAGA. Un deuxième clic sur EXÉCUTER réitère la transformation décrite ci-dessus au nouveau {\em mot}, et ainsi de suite.
+    \begin{enumerate}
+    \item Quels sont les {\em mots} qui restent inchangés quand on clique sur EXÉCUTER ?
+    \end{enumerate}
+\end{exercice}
+\end{Maquette}
+\end{Description}
+\clearpage
+\subsection*{Des logos ?}
+Les clés décrites dans cette partie ne sont disponibles que pour les maquettes
+\lstinline!Fiche! / \lstinline!Parcours!.
+\begin{Description}
+\item[La clé \Cle{Oral}]\Defaut{false}\par
+  pour indiquer que l'exercice se résoud oralement.
+\item[La clé \Cle{Calculatrice}]\Defaut{true}\par
+  pour afficher que la calculatrice {\em est interdite}.
+\end{Description}
+  \begin{Codes}[listing only,listing options={frame=,escapechar=!}]{0.4}{}
+\begin{Maquette}[Fiche]{Theme=Calcul mental}
+  \begin{exercice}[Oral]
+    $1+1=?$
+  \end{exercice}
+  \begin{exercice}[!\color{DarkGreen}\ttfamily Calculatrice!=false]
+    $1+1=?$
+  \end{exercice}
+  % On peut mélanger les deux logos.
+  \begin{exercice}[!\color{DarkGreen}\ttfamily Calculatrice!=false,Oral]
+    $1+1=?$
+  \end{exercice}
+\end{Maquette}
+\end{Codes}
+\begin{Maquette}[Fiche]{Theme=Calcul mental}
+  \begin{exercice}[Oral]
+    $1+1=?$
+  \end{exercice}
+  \begin{exercice}[Calculatrice=false]
+    $1+1=?$
+  \end{exercice}
+  \begin{exercice}[Calculatrice=false,Oral]
+    $1+1=?$
+  \end{exercice}
+\end{Maquette}
+\clearpage
+\subsection*{Focus sur la maquette \lstinline!Parcours!}
+Dans le cas de cette maquette, l'environnement \lstinline!exercice! dispose de la clé \Cle{Trajet} permettant de construire automatiquement le ou les parcours. La commande \lstinline!\AfficheParcours{}! représente un schéma associé à un parcours. Ce schéma se construit seul, automatiquement, après que l'enseignant ait utilisé la clé \Cle{Trajet} dans la création de ses exercices. Il faudra néanmoins deux compilations. \`A noter que ce schéma, avec l'utilisation du package \lstinline!hyperref!, dispose de liens cliquables sur les exercices sélectionnés pour le parcours.
+\begin{Codes}[listing only,listing options={frame=,escapechar=!}]{0.4}{\small}
+\begin{Maquette}[Parcours]{Theme=Calcul mental}
+  \begin{description}
+  \item[!Parcours! Padawan] \AfficheParcours{Padawan}
+  \item[!Parcours! Jedï] \AfficheParcours{Jedi}
+  \item[!Parcours! Grand Maître] \AfficheParcours{GrandMaitre}
+  \end{description}
+  \begin{exercice}[Trajet={Padawan,Jedi,GrandMaitre}]
+    
+  \end{exercice}
+  \begin{exercice}[Trajet={Padawan,Jedi}]
+    
+  \end{exercice}
+  \begin{exercice}[Trajet={Padawan}]
+    
+  \end{exercice}
+\end{Maquette}
+\end{Codes}
+\begin{Maquette}[Parcours]{Theme=Calcul mental}
+  \begin{description}
+  \item[Parcours Padawan] \AfficheParcours{Padawan}
+  \item[Parcours Jedï] \AfficheParcours{Jedi}
+  \item[Parcours Grand Maître] \AfficheParcours{GrandMaitre}
+  \end{description}
+  \begin{exercice}[Trajet={Padawan,Jedi,GrandMaitre}]
+    
+  \end{exercice}
+  \begin{exercice}[Trajet={Padawan,Jedi}]
+    
+  \end{exercice}
+  \begin{exercice}[Trajet={Padawan}]
+    
+  \end{exercice}
+\end{Maquette}
+\clearpage
+\subsection*{Focus sur la maquette \lstinline!ParcoursPerso!}
+Dans le cas de cette maquette, l'environnement \lstinline!exercice! n'admet aucune clé. En effet, cette maquette utilise :
+\begin{itemize}
+\item et un fichier {\ttfamily *.csv} de la forme :
+  \begin{Codes}[listing only]{0.4}{}
+Anne,Bec,{1,2}
+Paul,Isse,{1,3}
+Jean,Némar,{1,4}
+  \end{Codes}
+\item une liste d'exercices pour produire les trois pages suivantes à l'aide du code :
+\begin{Codes}[listing only]{0.4}{}
+\begin{Maquette}[ParcoursPerso]{Type=Fiche,Fichier=Documentation,Theme=L'alphabet,Niveau=6,Classe=Alpha}
+  \begin{exercice}
+    A
+  \end{exercice}
+  \begin{exercice}
+    B
+  \end{exercice}
+  \begin{exercice}
+    C
+  \end{exercice}
+  \begin{exercice}
+    D
+  \end{exercice}
+\end{Maquette}
+\end{Codes}
+\end{itemize}
+\clearpage
+\includepdf[pages=-]{TestParcoursPerso.pdf}
+\clearpage
+\subsection*{Focus sur la maquette \lstinline!PdT!}
+Dans le cas de cette maquette, la présentation des exercices est modifiée : il n'y a plus de titre afin de gagner de la place. De plus, chaque exercice définit, en fonction de son numéro (non écrit mais présent), huit points d'ancrages :\lstinline!N-5!, \lstinline!S-5!, \lstinline!O-5!, \lstinline!E-5!, \lstinline!NO-5!, \lstinline!NE-5!, \lstinline!SO-5! et \lstinline!SE-5! pour respectivement les points Nord, Sud, Ouest, Est, Nord-Ouest, Nord-Est, Sud-Ouest et Sud-Est du cadre de l'exercice 5.
+
+On pourra aussi utiliser (avec les même n\oe uds précédés de \lstinline!SOS!) l'environnement \lstinline!SOS! servant d'aide aux élèves en difficulté.
+
+De plus, deux commandes font leur apparition :
+\begin{itemize}
+\item \lstinline!\CheminVrai! listant les liaisons entre exercices sous la forme \lstinline!noeud départ/noeud arrivée!;
+\item \lstinline!\CheminFaux! listant les liaisons entre exercices sous la forme \lstinline!noeud départ/noeud arrivée!.
+\end{itemize}
+L'exemple suivant est obtenu par le code présenté à la page suivante.
+\begin{Maquette}[PdT]{Theme=Plan de travail : Calcul littéral,Niveau=3,Classe=Alpha,Date={},Code={}}
+  \setcounter{PfMExo}{0}
+    \begin{minipage}{0.35\linewidth}
+      \begin{exercice}%Exercice 1
+        A
+      \end{exercice}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.3\linewidth}
+      \begin{exercice}%Exercice 2
+        B
+      \end{exercice}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.15\linewidth}
+      \begin{SOS}%SOS 1
+        Aide A
+      \end{SOS}
+    \end{minipage}
+    
+    \vspace*{2cm}
+    
+    \begin{minipage}{0.35\linewidth}
+      \begin{exercice}%Exercice 3
+        C
+      \end{exercice}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.3\linewidth}
+      \begin{exercice}%Exercice 4
+        D
+      \end{exercice}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.15\linewidth}
+      \begin{SOS}%SOS 2
+        Aide B
+      \end{SOS}
+    \end{minipage}
+    \CheminVrai{S-1/NO-3}
+    \CheminFaux{E-1/O-2,E-2/SOS-O-1}
+  \end{Maquette}
+  \clearpage
+\begin{Codes}[listing only]{}{}
+  \begin{Maquette}[PdT]{Theme=Plan de travail : Calcul littéral,Niveau=3,Classe=Alpha,Date={},Code={}}
+    \begin{minipage}{0.35\linewidth}
+      \begin{exercice}%Exercice 1
+        A
+      \end{exercice}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.3\linewidth}
+      \begin{exercice}%Exercice 2
+        B
+      \end{exercice}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.15\linewidth}
+      \begin{SOS}%SOS 1
+        Aide A
+      \end{SOS}
+    \end{minipage}
+    
+    \vspace*{2cm}
+    
+    \begin{minipage}{0.35\linewidth}
+      \begin{exercice}%Exercice 3
+        C
+      \end{exercice}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.3\linewidth}
+      \begin{exercice}%Exercice 4
+        D
+      \end{exercice}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.15\linewidth}
+      \begin{SOS}%SOS 2
+        Aide B
+      \end{SOS}
+    \end{minipage}
+    \CheminVrai{S-1/NO-3}
+    \CheminFaux{E-1/O-2,E-2/SOS-O-1}
+  \end{Maquette}
+\end{Codes}
+\clearpage
+\subsection*{\og Correction\fg{} des exercices}
+  Un exercice avec correction aura la forme suivante :
+  \begin{Codes}[listing only]{0.4}{}
+\begin{exercice}
+    
+\end{exercice}
+\begin{Solution}
+  
+\end{Solution}
+\end{Codes}
+On peut gérer la correction des exercices à deux niveaux :
+\begin{Description}
+  \item[Au niveau de l'environnement ]\lstinline!Maquette!, on dispose de deux clés :
+\end{Description}
+  \begin{Description}
+\item[la Clé \Cle{CorrigeApres}]\Defaut{false}\par qui affiche le corrigé, s'il existe, après l'énoncé de l'exercice.
+\item[la Clé \Cle{CorrigeFin}]\Defaut{false}\par qui affiche les corrigés, s'ils existent, à la fin du document.
+\end{Description}
+
+Pour la maquette \lstinline!ParcoursPerso!, seule la clé \Cle{CorrigeFin} est autorisée.
+
+\begin{Codes}[listing only]{0.4}{\footnotesize}
+\begin{Maquette}[IE,CorrigeApres]{Theme=Calcul littéral}
+  \begin{exercice}% n'a pas de correction
+    \begin{enumerate}
+    \item $1+1=?$.
+    \end{enumerate}
+  \end{exercice}
+  \begin{exercice}
+    \begin{enumerate}
+    \item Développer $A=2(x+3)$.
+    \end{enumerate}
+  \end{exercice}
+  \begin{Solution}
+    \begin{enumerate}
+    \item $A=2(x+3)=2\times x+2\times3=2x+6$
+    \end{enumerate}
+  \end{Solution}
+\end{Maquette}
+\end{Codes}
+\begin{Maquette}[IE,CorrigeApres]{Theme=Calcul littéral}
+    \begin{exercice}% n'a pas de correction
+    \begin{enumerate}
+    \item $1+1=?$.
+    \end{enumerate}
+  \end{exercice}
+  \begin{exercice}
+    \begin{enumerate}
+    \item Développer $A=2(x+3)$.
+    \end{enumerate}
+  \end{exercice}
+  \begin{Solution}
+    \begin{enumerate}
+    \item $A=2(x+3)=2\times x+2\times3=2x+6$
+    \end{enumerate}
+  \end{Solution}
+\end{Maquette}
+\begin{Description}
+\item[Au niveau de l'environnement ]\lstinline!exercice!, on peut affiner la correction proposée en écrivant le code de l'exercice sous la forme :
+\end{Description}
+\begin{Codes}[listing only]{0.4}{}
+\begin{exercice}
+    
+\end{exercice}
+\begin{Solution}
+  
+\end{Solution}
+\begin{Reponse}
+  
+\end{Reponse}
+\begin{Indice}
+  
+\end{Indice}
+\end{Codes}
+L'environnement \lstinline!exercice! dispose alors des clés suivantes :
+\begin{Description}
+\item[la Clé \Cle{PasCorrige}]\Defaut{false}\par supprime l'affichage de tous types de correction pour l'exercice considéré;
+\item[la Clé \Cle{Pouce}]\Defaut{false}\par qui affiche uniquement le contenu de l'environnement \lstinline!Indice!;
+\item[la Clé \Cle{Direct}]\Defaut{false}\par qui affiche uniquement le contenu de l'environnement \lstinline!Reponse!.
+\end{Description}
+
+\bigskip
+
+Cela engendre, si nécessaire, la création de fichier \lstinline!*.sol! pour les solutions, \lstinline!*.rep! pour les réponses et \lstinline!*.cdp! pour les indices. Il conviendra de les effacer à chaque changement de clé (\Cle{PasCorrige}, \Cle{Pouce}, \Cle{Direct}) ou ajout d'exercice(s). En effet, la priorité d'affichage est donnée aux fichiers \lstinline!*.sol! puis \lstinline!*.rep! et enfin \lstinline!*.cdp!.
+
+\bigskip
+
+\begin{Codes}[listing only]{0.4}{}
+\begin{Maquette}[DS,CorrigeFin]{Numero=3}
+  \begin{exercice} % La clé CorrigeFin utilise le contenu de l'environnement Solution
+    $1+\dfrac2{10}=$
+  \end{exercice}
+  \begin{Solution}
+    $1+\dfrac2{10}=\num{1.2}$
+  \end{Solution}
+  \begin{Reponse}
+    \num{1.2}
+  \end{Reponse}
+  \begin{Indice}
+    Une unité représente dix dixièmes de l'unité.
+  \end{Indice}
+  \begin{exercice}[PasCorrige] % Malgré les environnements Solution, Reponse, Indice
+      $7(x+5)=$ ?
+  \end{exercice}
+  \begin{Solution}
+    $7(x+5)=7\times x+7\times 5=7x+35$
+  \end{Solution}
+  \begin{Indice}
+    Utiliser la simple distributivité.
+  \end{Indice}
+  \begin{Reponse}
+    $7x+35$
+  \end{Reponse}
+  \begin{exercice}[Direct] % On affiche uniquement l'environnement Reponse
+    $\dfrac34-\dfrac25=$?
+  \end{exercice}
+  \begin{Solution}
+    $\dfrac34-\dfrac25=\dfrac{15}{20}-\dfrac8{20}=\dfrac7{20}$
+  \end{Solution}
+  \begin{Reponse}
+    $\dfrac7{20}$
+  \end{Reponse}
+  \begin{Indice}
+    C'est une soustraction, il faut réduire au même dénominateur.
+  \end{Indice}
+  \begin{exercice}[Pouce] % On affiche uniquement l'environnement Indice
+    Si $x=3$, que vaut $x^3+4x$ ?
+  \end{exercice}
+  \begin{Solution}
+    $x^3+4x=3^3+4\times3=27+12=39$
+  \end{Solution}
+  \begin{Indice}
+    Que veut dire $x^3$ ? Que veut dire $4x$ ?
+  \end{Indice}
+  \begin{Reponse}
+    39
+  \end{Reponse}
+\end{Maquette}
+\end{Codes}
+\begin{Maquette}[DS,CorrigeFin]{Numero=3}
+  \begin{exercice} % La clé CorrigeFin utilise le contenu de l'environnement Solution
+    $1+\dfrac2{10}=$
+  \end{exercice}
+  \begin{Solution}
+    $1+\dfrac2{10}=\num{1.2}$
+  \end{Solution}
+  \begin{Reponse}
+    \num{1.2}
+  \end{Reponse}
+  \begin{Indice}
+    Une unité représente dix dixièmes de l'unité.
+  \end{Indice}
+  \begin{exercice}[PasCorrige]
+    $7(x+5)=$ ?
+  \end{exercice}
+  \begin{Solution}
+    $7(x+5)=7\times x+7\times 5=7x+35$
+  \end{Solution}
+  \begin{Indice}
+    Utiliser la simple distributivité.
+  \end{Indice}
+  \begin{Reponse}
+    $7x+35$
+  \end{Reponse}
+  \begin{exercice}[Direct]
+    
+    $\dfrac34-\dfrac25=$?
+  \end{exercice}
+  \begin{Solution}
+    $\dfrac34-\dfrac25=\dfrac{15}{20}-\dfrac8{20}=\dfrac7{20}$
+  \end{Solution}
+  \begin{Reponse}
+    $\dfrac7{20}$
+  \end{Reponse}
+  \begin{Indice}
+    C'est une soustraction, il faut réduire au même dénominateur.
+  \end{Indice}
+  \begin{exercice}[Pouce]
+    Si $x=3$, que vaut $x^3+4x$ ?
+  \end{exercice}
+  \begin{Solution}
+    $x^3+4x=3^3+4\times3=27+12=39$
+  \end{Solution}
+  \begin{Indice}
+    Que veut dire $x^3$ ? Que veut dire $4x$ ?
+  \end{Indice}
+  \begin{Reponse}
+    39
+  \end{Reponse}
+\end{Maquette}
+\end{document}
+%%% Local Variables: 
+%%% TeX-engine: luatex
+%%% End:

@@ -1,0 +1,646 @@
+\NeedsTeXFormat{LaTeX2e}%
+\ProvidesPackage{ProfModelsStyles}[2026/08/06 Styles graphiques des exercices et maquettes pour ProfModels]%
+
+
+%######################################################################
+% PARTIE 1 : STYLES ET ENVIRONNEMENTS PROFMODELS (ex ProfModelsStyles.sty)
+%######################################################################
+
+%---------- style exercices DM ----------------------
+\tcbset{%
+tikzDM/.style={%
+attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
+ top=3mm, coltitle=black,%
+  %boxed title style={frame code={empty}},colbacktitle=white
+ boxed title style={colback=white,arc=0mm}%
+ }}
+%----  Style exercices DS  ---------------------------
+\tcbset{%
+  tikzds/.style={%
+    before skip=2mm,after skip=2mm,
+    attach boxed title to top left={xshift=1cm,yshift*=1mm-\tcboxedtitleheight},
+    varwidth boxed title*=-3cm,
+    boxed title style={frame code={
+        \path[fill=tcbcolback!30!black]
+        ([yshift=-1mm,xshift=-1mm]frame.north west)
+        arc[start angle=0,end angle=180,radius=1mm]
+        ([yshift=-1mm,xshift=1mm]frame.north east)
+        arc[start angle=180,end angle=0,radius=1mm];
+        \path[left color=tcbcolback!60!black,right color=tcbcolback!60!black,
+        middle color=tcbcolback!80!black]
+        ([xshift=-2mm]frame.north west) -- ([xshift=2mm]frame.north east)
+        [rounded corners=1mm]-- ([xshift=1mm,yshift=-1mm]frame.north east)
+        -- (frame.south east) -- (frame.south west)
+        -- ([xshift=-1mm,yshift=-1mm]frame.north west)
+        [sharp corners]-- cycle;
+      },interior engine=empty,
+    }
+  }%
+}%
+
+%---- style exercices Fiche--------------------------------
+\tcbset{%
+  tikzfiche/.style={%
+    before skip=1em,
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=PfMCadreFiche,
+    overlay unbroken and first={%
+      \node[%
+      name=A,
+      fill=white,
+      anchor=west,
+      xshift=10pt,
+      ] at (frame.north west){\bfseries\sffamily \useKV[Fiche]{NomExercice} \thePfMExo\ifboolKV[ClesExercices]{AffichageTitre}{ : \useKV[ClesExercices]{Titre}}{}};
+      \ifboolKV[ClesExercices]{AffichageCompetence}{%
+        \node[%
+        fill=white,
+        anchor=east,
+        xshift=-10pt,
+        text=PfMColCpt,%
+        ]
+        at (frame.north east)
+        {\itshape\scriptsize\sffamily Compétence(s) dominante(s) : \useKV[ClesExercices]{Competence}};
+      }{}%
+      %%
+      \ifboolKV[ClesExercices]{AffichageSource}{%
+        \node[%
+        fill=white,
+        anchor=east,
+        xshift=-10pt,
+        text=PfMColSrc,
+        ]
+        at (frame.south east)
+        {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
+      }{}%
+    }%
+  }%
+}%
+%-------------------------------------------------------
+\NewDocumentEnvironment{exerciceDM}{O{}O{tikzDM}}{%
+  \setcounter{PfMAlea}{0}%
+  \useKVdefault[ClesExercices]
+  \setKV[ClesExercices]{#1}
+  \PfM@VerifierAffichage
+  \ifPfMAfficherExo
+  \refstepcounter{section}
+  \refstepcounter{PfMExo}
+  \tcolorbox[%
+  lowerbox=ignored,
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=PfMCadreDM,
+    fonttitle=\bfseries\sffamily,
+ 	title=Exercice \thePfMExo,
+   #2,
+   overlay unbroken and first={%
+      \ifboolKV[ClesExercices]{AffichageSource}{%
+        \node[%
+        fill=white,
+        anchor=east,
+        xshift=-10pt,
+        text=gray!50,
+        ]
+        at (frame.south east)
+        {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
+      }{}%
+    },%
+  label is label,
+  label=page-\theMaquette-\thePfMExo%
+  ]
+  \else
+  \setbox\PfMExoPoubelle\vbox\bgroup
+  \fi
+}{%
+  \ifPfMAfficherExo
+    \endtcolorbox%
+  \else
+    \egroup%
+  \fi
+}
+%-----------------------------------------------------
+
+\NewDocumentEnvironment{exerciceFiche}{O{}}{%
+  \setcounter{PfMAlea}{0}%
+  \setcounter{PfMNbLogo}{1}%
+  \useKVdefault[ClesExercices]%
+  \setKV[ClesExercices]{#1}%
+ %\setKV[ClesExercices]{BaremeTotal=false,BaremeDetaille=false}
+  \PfM@VerifierAffichage
+  \ifPfMAfficherExo
+  \refstepcounter{section}%
+  \refstepcounter{PfMExo}%
+  \tcolorbox[%
+  tikzfiche,
+  label is label,
+  label=page-\theMaquette-\thePfMExo
+  ]
+  \else
+  \setbox\PfMExoPoubelle\vbox\bgroup
+  \fi
+}{%
+  \ifPfMAfficherExo
+    \endtcolorbox%
+  \else
+    \egroup%
+  \fi
+}
+%-------------------------------------------------------
+\NewDocumentEnvironment{exerciceDS}{O{}O{tikzds}}{%
+  \setcounter{PfMAlea}{0}%
+  \useKVdefault[ClesExercices]%
+  \setKV[ClesExercices]{#1}%
+  \PfM@VerifierAffichage
+  \ifPfMAfficherExo
+  \refstepcounter{section}%
+  \refstepcounter{PfMExo}%
+  \immediate\write\@auxout{%
+    \string\opcopy{\thePfMExo}{TotalExo\theMaquette}%
+  }
+  \ifboolKV[ClesExercices]{BaremeTotal}{%
+    \immediate\write\@auxout{%
+      \string\opcopy{0}{total\theMaquette-\the\c@PfMExo}%
+    }}{}
+  \tcolorbox[%
+ lowerbox=ignored,
+  enhanced,
+    breakable,
+  colback=white,
+ colframe=PfMCadreDM,
+  fonttitle=\bfseries\sffamily,
+    title=Exercice \thePfMExo,
+    #2,
+    overlay unbroken and first={%
+      \ifboolKV[ClesExercices]{AffichageTitre}{\node[fill=white,
+        anchor=east,
+        yshift=0.5pt,
+        xshift=-10pt,
+        text=gray!85,
+        ]
+        at (frame.north) {\useKV[ClesExercices]{Titre}};}{}
+      \ifboolKV[ClesExercices]{AffichageSource}{%
+        \node[
+        fill=white,
+        anchor=east,
+        yshift=0.5pt,
+        xshift=-10pt,
+        text=gray!85,
+        ]
+        at (frame.south east)
+        {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
+      }{}
+      \ifboolKV[ClesExercices]{BaremeTotal}{%
+        \node[
+        fill=white,
+        anchor=east,
+        xshift=-10pt,
+        text=black,
+        font=\bfseries
+        ]
+        at (frame.north east)
+        {\footnotesize\sffamily \total{\theMaquette-\the\c@PfMExo}};
+      }{}
+    },%
+  label is label,
+  label=page-\theMaquette-\thePfMExo
+  ]
+  \else
+  \setbox\PfMExoPoubelle\vbox\bgroup
+  \fi
+}{%
+  \ifPfMAfficherExo
+    \endtcolorbox%
+  \else
+    \egroup%
+  \fi
+}
+%-----------------------------------------------------
+%Alias pour tous les exercices.
+\NewDocumentEnvironment{exercice}{}{}{}%
+
+%%%%%%%%%% Style Maquettes ---------------------------
+
+%--------------Style Maquette DM ---------------
+\NewDocumentCommand\TikzDM{}{%
+  \clearpage%
+  \begin{tcboxeditemize}[raster columns=4,raster rows=1, raster equal height=rows]{colback=lightgrey,width=\linewidth}
+\tcbitem[enhanced jigsaw,raster multicolumn=3, fontupper=\bfseries, colback=white, boxrule=2pt, segmentation style={solid,gray!50!black,line width=2pt}]
+        \begin{Large}
+        \textbf{Devoir en temps libre \useKV[DM]{Numero}}\hfill
+         \textbf{\useKV[DM]{Niveau}.A.C\useKV[DM]{Classe}}
+        \end{Large}
+      \vspace*{2mm}
+   
+        \textbf{Mathématiques} \hfill \useKV[DM]{Date}   
+        \tcblower
+        
+        \begin{large}
+        \textbf{\`A rendre le : \useKV[DM]{FinDate}}\hfill
+        \textbf{S : \RNum{\useKV[DM]{Semestre}}}
+        \end{large}
+ \tcbitem[enhanced jigsaw, colback=lightgrey, boxrule=0pt,left=0pt,right=0pt,top=0pt,bottom=0pt,frame code={empty}]
+  \ifboolKV[DM]{Prive}{%
+ \includegraphics[width=\linewidth]{logoPr.png}}%
+ {\includegraphics[width=\linewidth]{logoPu.png}}%
+\end{tcboxeditemize}
+ }%
+
+  %-------Style Maquette DS -------------------------------
+\newcommand\TikzDevS{%
+  \clearpage
+  \begin{tcolorbox}[colback=gray!5,%
+    enhanced,%
+    overlay unbroken and first={%
+      \node[yshift=1em] at (frame.south) {\scriptsize\sffamily-- Calculatrice \ifboolKV[DS]{Calculatrice}{autorisée}{interdite} --};
+    }
+    ]%
+    \sffamily Devoir surveillé N\textsuperscript{\underline{o}}\useKV[DS]{Numero} (Sujet \useKV[DS]{Sujet})\hfill\useKV[DS]{Niveau}.A.C \useKV[DS]{Classe}
+    \par{\tiny\useKV[DS]{Code}}\hfill{\scriptsize\useKV[DS]{Date}}
+  \end{tcolorbox}%
+}%
+%-------------Style Maquette DevS ----------------
+\newcommand\TikzDS{%
+\clearpage%
+\begin{tcboxeditemize}[raster columns=8,raster rows=2, raster equal height=rows,raster height=\tcbtextheight]{colback=lightgrey}
+\tcbitem[raster multicolumn=6,raster multirow=2,blankest,raster height=\tcbtextheight]
+\begin{tcbitemize}[raster columns=6,raster rows=2]
+\tcbitem[enhanced jigsaw,raster multicolumn=6, fontupper=\bfseries, colback=white, boxrule=2pt, segmentation style={solid,gray!50!black,line width=2pt},
+overlay unbroken and first={%
+      \node[anchor=north east, yshift=-2mm] at ([yshift=\tcboverlaplower]segmentation.east) {\sffamily-- Calculatrice \ifboolKV[DS]{Calculatrice}{autorisée}{interdite} --};}]
+   \begin{Large}
+   \textbf{\sffamily Devoir Surveillé N\textsuperscript{\underline{o}} \useKV[DS]{Numero}}
+        \end{Large}\hfill
+   \begin{Large}
+   \textbf{\useKV[DS]{Niveau}.A.C\useKV[DS]{Classe}}
+   \end{Large}\vspace*{2mm}
+   
+   \textbf{\sffamily Mathématiques}\hfill \useKV[DS]{Sujet} \hfill\textbf{\useKV[DS]{Date}}
+        \tcblower
+        \begin{large}
+        \textbf{Durée : 1 H}  
+        \end{large}
+ 
+\tcbitem[coltitle=black, enhanced jigsaw,raster multicolumn=5, boxrule=2pt,colback=white]
+        \begin{large}\textbf{Nom :}\end{large}
+\tcbitem[coltitle=black, enhanced jigsaw,colback=white, boxrule=2pt,halign=left,left=2pt]
+        \begin{large}\textbf{N°:}\end{large}
+\end{tcbitemize}
+\tcbitem[enhanced jigsaw, fontupper=\bfseries,raster multirow=2,raster multicolumn=2, raster height=\tcbtextheight,colback=white, boxrule=2pt, segmentation style={solid,gray!50!black,line width=2pt},
+finish={\draw[gray!50!black,line width=2pt] 
+([xshift=-2pt,yshift=1pt]frame.25) -- ([xshift=0pt,yshift=1pt]frame.south);
+\node[above=5pt,xshift=5pt] at ($(frame.south)!.5!(frame.south east)$)  {\begin{Huge}\textbf{\NoteFinale} \end{Huge}};
+ }]%
+    \begin{center}\begin{Large}\textbf{Note}\end{Large}\end{center}
+    \tcblower
+ 
+\end{tcboxeditemize}
+}%
+%------------------------------------------------------
+%-------Style Maquette Fiche  -----------------------------
+\NewDocumentCommand\TikzFiche{}{%
+  \begin{tcolorbox}[spread upwards=-1cm,colback=gray!5]%
+    \Large\sffamily \useKV[Fiche]{Theme}\hfill\useKV[Fiche]{Niveau} \useKV[Fiche]{Classe}%
+    \par{\tiny\useKV[Fiche]{Code}}\hfill{\scriptsize\useKV[Fiche]{Date}}%
+  \end{tcolorbox}%
+}
+%--------------------------------------------------------
+%----------Style Maquette Exam ---------------------------
+\newcommand\TikzExam{%
+  \clearpage%
+\begin{tcboxeditemize}[raster equal height=rows,raster columns=4]{colback=lightgrey}
+\tcbitem[enhanced,frame hidden,boxrule=0pt,top=0pt,bottom=0pt,left=0pt,right=0pt]
+ \begin{center}
+ \includegraphics[width=0.8\linewidth]{rmlogo.png}
+ \end{center}
+\tcbitem[enhanced jigsaw,raster multicolumn=2, segmentation style={solid,gray!50!black,line width=2pt}]
+		\begin{center}
+        \begin{Large}
+        \textbf{Examen Normalisé Local}
+        \end{Large}
+        \end{center}
+                             
+        \begin{large}\textbf{Mathématiques}\end{large}\hfill\small{\textbf{Janvier \useKV[Exam]{Date}}}
+        \tcblower
+        
+        \begin{large}
+        \textbf{Durée: 2 Heures}\hfill\textbf{3.A.C}
+        \end{large}  
+ \tcbitem[enhanced,frame hidden,boxrule=0pt,boxrule=0pt,%
+ top=1mm,bottom=0pt,left=0pt,right=0pt]
+ 
+ 	 \ifboolKV[Exam]{Prive}{%
+ 	  \includegraphics[width=\linewidth]{logoPr.png}%
+     }%
+	{%
+	  \includegraphics[width=\linewidth]{logoPu.png}
+     }%  
+ \tcbitem[raster multicolumn=3,raster multirow=3,raster height=\tcbtextheight,raster equal height=rows]         
+\begin{tcbitemize}[raster rows=3,raster columns=3,raster equal 		height=rows]
+	\ifboolKV[Exam]{Prive}{%
+	\tcbitem[raster multicolumn=3,colback=white]
+	\begin{large}\textbf{Nom  :}\end{large}
+\tcbitem[raster multicolumn=3,colback=white]
+\begin{large}\textbf{N° Exam  :}\end{large}
+	}%
+	{%
+	\tcbitem[raster multicolumn=2,colback=white]
+	\begin{large}\textbf{Nom  :}\end{large}
+\tcbitem[colback=white]
+\textbf{Classe : 3/}
+\tcbitem[raster multicolumn=2,colback=white]
+\begin{large}\textbf{N° Exam  :}\end{large}
+\tcbitem[colback=white]
+\textbf{N° Cl :}
+	}%
+\tcbitem[raster multicolumn=3]
+\begin{enumerate}
+    \item[$\bullet$]La calculatrice non programmable est \textbf{autorisé}.
+    \end{enumerate}
+\end{tcbitemize}
+\tcbitem[enhanced jigsaw, fontupper=\bfseries,raster multirow=2,raster height=\tcbtextheight,raster equal height=rows, colback=white, boxrule=2pt, segmentation style={solid,gray!50!black,line width=2pt},finish={\draw[gray!50!black,line width=2pt] 
+(frame.25) -- (frame.south); \node[above=5pt] at ($(frame.south)!.5!(frame.south east)$)  {\begin{Huge}
+\textbf{\NoteFinale}\end{Huge}};}]
+    \begin{center}\begin{huge}\textbf{Note}\end{huge}\end{center}  
+    \tcblower
+\end{tcboxeditemize}
+}%
+
+%----------Style Maquette Olympiade ---------------------------
+\newcommand\TikzOlym{%
+  \clearpage%
+\begin{tcboxeditemize}[raster equal height=rows,raster columns=4]{colback=lightgrey}
+\tcbitem[enhanced,frame hidden,boxrule=0pt,top=0pt,bottom=0pt,left=0pt,right=0pt]
+ \begin{center}
+ \includegraphics[width=0.8\linewidth]{rmlogo.png}
+ \end{center}
+\tcbitem[enhanced jigsaw,raster multicolumn=2, segmentation style={solid,gray!50!black,line width=2pt}]
+		\begin{center}
+        \begin{Large}
+        \textbf{Olympiade de Maths}
+        \end{Large}
+        \end{center}
+                             
+        \begin{large}\textbf{Mathématiques}\end{large}\hfill\small{\textbf{\useKV[Olym]{Date}}}
+        \tcblower
+        
+        \begin{large}
+        \textbf{Durée: 1.5 Heure}\hfill\textbf{1.A.C}
+        \end{large}  
+ \tcbitem[enhanced,frame hidden,boxrule=0pt,boxrule=0pt,%
+ top=1mm,bottom=0pt,left=0pt,right=0pt]
+	{%
+	  \includegraphics[width=\linewidth]{logoPu.png}
+     }%  
+ \tcbitem[raster multicolumn=3,raster multirow=3,raster height=\tcbtextheight]         
+\begin{tcbitemize}[raster rows=2,raster columns=3,raster equal 		height=rows]
+	\tcbitem[raster multicolumn=2,colback=white]
+	\begin{large}\textbf{Nom  :}\end{large}
+\tcbitem[colback=white]
+\textbf{Classe : 1/}
+\tcbitem[raster multicolumn=3]
+\begin{enumerate}
+    \item[$\bullet$]La calculatrice est \textbf{non autorisé}.
+    \end{enumerate}
+\end{tcbitemize}
+\tcbitem[enhanced jigsaw, fontupper=\bfseries,raster multirow=2,raster height=\tcbtextheight, colback=white, boxrule=2pt, segmentation style={solid,gray!50!black,line width=2pt},finish={\draw[gray!50!black,line width=2pt] 
+(frame.5) -- (frame.south); \node[right=0mm, above=0mm] at ($(frame.south)!.5!(frame.south east)$)  {\begin{Huge}
+\textbf{\NoteFinale}\end{Huge}};}]
+    \begin{center}\begin{huge}\textbf{Note}\end{huge}\end{center}  
+    \tcblower
+\end{tcboxeditemize}
+}%
+%---------------------------------------------------------
+
+
+%######################################################################
+% PARTIE 2 : BIBLIOTHEQUE DE STYLES GENERIQUES (ex pstyle.sty, v1.00 - 2022/12/30)
+% Ces styles (style0 a style8) sont independants de ProfModels et
+% peuvent etre appliques a n'importe quelle tcolorbox, par ex. :
+%   \begin{tcolorbox}[style3,title=Mon titre] ... \end{tcolorbox}
+%######################################################################
+
+%----------------------------------------------------------
+%%    		 style0 	 %%%%%%%%%%%%%%%%%%
+\tcbset{%
+  style0/.style={%
+    attach boxed title to top left={xshift=0.2mm},
+    boxed title size=standard,
+    boxed title style={%
+      empty,
+      rounded corners=north, 
+      boxrule=0pt,
+      bottom=0pt
+    },
+    underlay boxed title={%
+      \filldraw[rounded corners, gray!85, line width=.5mm]
+      (title.south east)--++(90:\tcboxedtitleheight)--++(183:\tcboxedtitlewidth)--++(-90:\tcboxedtitleheight)|-cycle;
+    }%
+  }%
+}%
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 		    style1  		%%%%%%%%%%%%%
+\tcbset{style1/.style={%
+		 %enhanced, 
+       % breakable,
+        sharp corners,
+        rounded corners=northwest,
+        %colback=white,
+       % colframe=gray!90!black,
+        %fonttitle=\bfseries\large\sffamily,
+        frame hidden,
+        attach boxed title to top left,
+        boxed title size=standard,
+         boxed title style={%
+                empty,
+                rounded corners=north, 
+                boxrule=0pt,
+                bottom=0pt},
+                underlay boxed title={%
+                \fill[rounded corners=\kvtcb@arc,black,fill=gray!40!white, line width=.5mm]
+                    (title.south east)--++(93:\tcboxedtitleheight)--++(183:\tcboxedtitlewidth)--++(-87:\tcboxedtitleheight)|-cycle;
+                \draw[tcbcolframe, line width=.5mm] (title.south west)|-(frame.north east);
+                }}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 		     style2  		%%%%%%%%%             
+\tcbset{style2/.style={
+ %breakable,
+  %enhanced,
+  %colback=white,
+  boxrule=0pt,
+  arc=0pt,
+  outer arc=0pt,
+  title style={gray!30!white},
+  overlay={
+    \draw[line width=1.5pt] (frame.south west) -- (frame.south east);
+  }
+}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%	           style3		%%%%%%%%%%%%%%%%%
+\tcbset{
+    style3/.style={%
+        %enhanced, 
+       % breakable,
+       % colback=white,
+        %colframe=gray!40!white,
+        attach boxed title to top left={yshift*=-\tcboxedtitleheight}, 
+        boxed title size=title,
+        boxed title style={%
+            sharp corners, 
+            rounded corners=northwest, 
+            colback=tcbcolframe, 
+            boxrule=0pt,
+        },
+        underlay boxed title={%
+            \path[fill=tcbcolframe] (title.south west)--(title.south east) 
+                to[out=0, in=180] ([xshift=5mm]title.east)--
+                (title.center-|frame.east)
+                [rounded corners=\kvtcb@arc] |- 
+                (frame.north) -| cycle; }}}              
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                 style4    		%%%%%%
+ \tcbset{style4/.style={
+ %enhanced,
+before skip=2mm,after skip=2mm,
+%colback=white,colframe=black,
+boxrule=0.4mm,
+attach boxed title to top left={xshift=1cm,yshift*=1mm-\tcboxedtitleheight},
+boxed title style={frame code={
+\draw[fill=tcbcolback!90!gray]
+([yshift=-1mm,xshift=-1mm]frame.north west)
+arc[start angle=0,end angle=180,radius=1mm]
+([yshift=-1mm,xshift=1mm]frame.north east)
+arc[start angle=180,end angle=0,radius=1mm];
+\draw[left color=tcbcolback!95!gray,right color=tcbcolback!95!gray,
+middle color=white]
+([xshift=-2mm]frame.north west) -- ([xshift=2mm]frame.north east)
+[rounded corners=1mm]-- ([xshift=1mm,yshift=-1mm]frame.north east)
+-- (frame.south east) -- (frame.south west)
+-- ([xshift=-1mm,yshift=-1mm]frame.north west)
+[sharp corners]-- cycle;
+},interior engine=empty,
+}}} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    		  style5   		%%%%%%%%
+\tcbset{style5/.style={
+%enhanced,
+skin=enhancedlast jigsaw,
+attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+colbacktitle=gray!40!white,%colframe=black,
+interior style={top color=white,bottom color=white},
+boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+underlay boxed title={
+\filldraw[gray!40!white] (title.north west) -- (title.north east)
+-- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+-- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+-- (title.south west) -- cycle;
+\filldraw[blue!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+-- +(-0.4,0) -- +(0,-0.3) -- cycle;
+\fill[blue!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+-- +(0,-0.3) -- +(0.4,0) -- cycle; }}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     			style6			%%%%%%%%%%%%%
+\tcbset{style6/.style={
+%enhanced,breakable,
+	before skip=2mm,after skip=0.3cm,
+	bottom=0.5cm,%colframe=black,
+	%colback=gray!2,
+	boxrule=0.2mm,arc=2mm,drop midday shadow=gray,
+	attach boxed title to top left={xshift=0cm,yshift*=0mm-\tcboxedtitleheight},
+	boxed title style={frame code={
+			\draw[fill=gray!30!white]
+			([xshift=+0.5cm]frame.north east)[rounded corners=2mm]--(frame.north west)[sharp corners]--(frame.south west) --(frame.south east)to[out=0,in=180]cycle;
+			\draw[#1]([yshift=-0.5mm]frame.south west)--([yshift=-0.5mm,xshift=+0.4mm]frame.south east)to[out=0,in=180]([yshift=0mm,xshift=+0.58cm]frame.north east);
+		},interior engine=empty,
+	},pad at break*=4mm}}   
+	%----------------------------------------------
+	%---------- Style7 -------------------------
+	%\tcbuselibrary{skins}
+	\tcbset{style7/.style={%
+	 before=\bigskip\centering,
+  after=\bigskip,
+ % breakable, 
+  enhanced,  colback=white, 
+  sharp corners, 
+  rounded corners=southeast,
+  arc=25pt, 
+  attach boxed title to top left={xshift=5pt}, 
+  boxed title style={%
+    enhanced, 
+    colframe=gray, 
+    colback=gray, 
+    borderline east={1.5pt}{8pt}{white}, 
+    borderline east={1.5pt}{3.5pt}{white},
+    borderline east={3.5pt}{0pt}{white},    
+    borderline east={2.75pt}{0.25pt}{gray!50},    
+    borderline east={2.75pt}{-4pt}{gray!20},    
+    bottomrule=0pt, 
+    rightrule=5pt, 
+    sharp corners, 
+  },
+  interior style={}, 
+  frame code={%
+    \begin{scope}[line width=1.5pt, gray]
+      \fill[shade, bottom color=gray!30, top color=white]
+      ([xshift=-30pt]frame.south east)
+      to[out=0, in=-90] ([yshift=30pt]frame.south east)
+      -- ([shift={(-1pt, 15pt)}]frame.south east)
+      to[out=-90, in=0] ([xshift=-25pt]frame.south east);
+      \draw
+      ([shift={(-1pt, 19pt)}]frame.north west) coordinate (iniPoint)
+      -- ([xshift=-1pt]frame.south west)
+      -- ([xshift=-30pt]frame.south east)
+      to[out=0, in=-90] ([yshift=30pt]frame.south east)
+      -- ([yshift=5pt]frame.north east) -- ++(-5, 0) coordinate (endPoint);
+      \draw (endPoint) -- ++(-5pt, 5pt) -- ++(-5pt, -5pt)     -- ++(5pt, -5pt) -- cycle;
+      \draw (iniPoint) -- ++(4pt, 0) -- ++(-8pt, 0);
+      \draw (iniPoint) ++(0, -10pt) -- ++(6pt, 0) -- ++(-12pt, 0);
+      \draw (iniPoint) ++(0, -14pt) -- ++(6pt, 0) -- ++(-12pt, 0);
+    \end{scope}  
+	}}}
+	%------------ Style8 -----------------------
+\definecolor{textnewGreen}{HTML}{66AE3E}
+\definecolor{bgnewGreen}{HTML}{EBF4DE}
+
+\newtcbox{\titlebox}{
+  enhanced,
+  colupper=white,
+  colback=textnewGreen,
+  fontupper=\bfseries,
+  size=small,
+  baseline=3pt,
+  nobeforeafter,
+  frame code={
+    \path[fill=textnewGreen] (frame.north west)
+    -- ([xshift=2mm]frame.north east)
+    -- (frame.south east)
+    -- (frame.south west)
+    -- (frame.north west)
+      [sharp corners]-- cycle;
+  }
+}%
+\tcbset{style8/.style={%
+  %enhanced,
+  %skin=bicolor,
+  arc=0pt,
+  coltitle=white,
+  %colframe=textnewGreen,
+  %colback=bgnewGreen,
+  %colbacklower=white,
+  fonttitle=\bfseries,
+  detach title,
+  %title=Exercice,
+  before upper*={%
+    \vskip-\dimexpr\kvtcb@boxsep+\kvtcb@top+.1pt
+    \hspace*{-\dimexpr\kvtcb@boxsep+\kvtcb@leftupper+.1pt}%
+    \expandafter\titlebox\expandafter{\tcbtitletext} %
+  }}}
+  
+
+	        
+%%%%%%%%%%%%	FIN STYLES		%%%%%%%%%%%%%%%   
+
+\endinput
