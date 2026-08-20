@@ -4,7 +4,7 @@
 \@ifpackageloaded{xparse}{}{\RequirePackage{xparse}}
 \RequirePackage{tkz-base}
 \RequirePackage[lua]{tkz-euclide}
-
+%============================================================
 \ExplSyntaxOn
 \NewDocumentCommand{\figsetdefault}{ m m m }
   {
@@ -19,7 +19,6 @@
   {
     \clist_item:on {#1} {#2}
   }
-
 \ExplSyntaxOff
 
 % ==============================================================
@@ -27,39 +26,75 @@
 % ==============================================================
 
 % --------------------------------------------------------------
-% \cylindre[arc][labels]{rayon}{hauteur}
+% \cylindre[arc][prefixe]{rayon}{hauteur}
 % --------------------------------------------------------------
-
 \NewDocumentCommand{\cylindre}{ O{} O{} m m }{%
   \figsetdefault{#1}{0.5}{\figArc}%
   \figsetdefault{#2}{O}{\figLbls}%
   \def\figR{#3}%
   \def\figH{#4}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](0,\figH){\figLbls Oh}
-  \tkzDefPoint(\figR,0){\figLbls ptA}
-  \tkzDefPoint(-\figR,0){\figLbls ptC}
-  \tkzDefShiftPoint[\figLbls ptA](0,\figH){\figLbls ptAh}
-  \tkzDefShiftPoint[\figLbls ptC](0,\figH){\figLbls ptCh}
+  % nom de base (calculé une seule fois)
+  \edef\figBase{\figlabelitem{\figLbls}{1}}%
 
-  \tkzDrawSegments[thick](\figLbls ptC,\figLbls ptCh \figLbls ptA,\figLbls ptAh)
+  % --- Centres ---
+  \tkzDefPoint(0,0){\figBase}
+  \tkzDefShiftPoint[\figBase](0,\figH){\figBase h}
 
-  \tkzDrawEllipse[thick](\figLbls Oh,\figR cm,\figArc cm,0)
+  % --- Points gauche / droite (bas et haut) ---
+  \tkzDefPoint(\figR,0){\figBase D}
+  \tkzDefPoint(-\figR,0){\figBase G}
+  \tkzDefShiftPoint[\figBase D](0,\figH){\figBase Dh}
+  \tkzDefShiftPoint[\figBase G](0,\figH){\figBase Gh}
 
+  % --- Points avant / arrière (bas et haut) — NOUVEAU ---
+  \tkzDefPoint(0,-\figArc){\figBase Av}
+  \tkzDefPoint(0,\figArc){\figBase Ar}
+  \tkzDefShiftPoint[\figBase Av](0,\figH){\figBase Avh}
+  \tkzDefShiftPoint[\figBase Ar](0,\figH){\figBase Arh}
+
+  % --- Génératrices verticales ---
+  \tkzDrawSegments[thick](\figBase G,\figBase Gh \figBase D,\figBase Dh)
+
+  % --- Cercle du haut (entièrement visible) ---
+  \tkzDrawEllipse[thick](\figBase h,\figR cm,\figArc cm,0)
+
+  % --- Cercle du bas : moitié cachée ---
   \begin{scope}
     \clip (-\figR-0.1,0) rectangle (\figR+0.1,\figArc+0.1);
-    \tkzDrawEllipse[dashed](\figlabelitem{\figLbls}{1},\figR cm,\figArc cm,0)
+    \tkzDrawEllipse[dashed](\figBase,\figR cm,\figArc cm,0)
   \end{scope}
 
+  % --- Cercle du bas : moitié visible ---
   \begin{scope}
     \clip (-\figR-0.1,-\figArc-0.1) rectangle (\figR+0.1,0);
-    \tkzDrawEllipse[thick](\figlabelitem{\figLbls}{1},\figR cm,\figArc cm,0)
+    \tkzDrawEllipse[thick](\figBase,\figR cm,\figArc cm,0)
   \end{scope}
 
-  \tkzDrawPoint(\figlabelitem{\figLbls}{1})
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzDrawPoint(\figBase)
+  \tkzLabelPoint[below](\figBase){\figBase}
 }
+
+% --------------------------------------------------------------
+% \cylpoint{angle}{bas|haut}{nom}
+% Place un point sur le contour elliptique à l'angle donné (°),
+% à appeler juste après \cylindre, dans la même tikzpicture.
+%  \cylindre[0.5]{2}{4}
+%  \foreach \pt in {O,Oh,OD,OG,ODh,OGh,OAv,OAr,OAvh,OArh}{
+%    \tkzDrawPoint[red](\pt)
+%    \tkzLabelPoint[above right](\pt){\tiny\pt}
+%  }
+% --------------------------------------------------------------
+\ExplSyntaxOn
+\NewDocumentCommand{\cylpoint}{ m m m }
+  {
+    \pgfmathsetmacro{\figPX}{\figR*cos(#1)}
+    \pgfmathsetmacro{\figPY}{\figArc*sin(#1)}
+    \str_if_eq:eeTF {#2} {haut}
+      { \tkzDefShiftPoint[\figBase h](\figPX,\figPY){#3} }
+      { \tkzDefShiftPoint[\figBase](\figPX,\figPY){#3} }
+  }
+\ExplSyntaxOff
 
 % --------------------------------------------------------------
 % \cube[angle][labels]{longueur}{hauteur}
@@ -342,7 +377,7 @@
   \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
   \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figR){\figlabelitem{\figLbls}{2}}
 
-  \draw (\figlabelitem{\figLbls}{1}) circle (\figR cm);
+  \tkzDrawCircle(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
   \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
   \tkzDrawPoint(\figlabelitem{\figLbls}{1})
   \tkzDrawPoint(\figlabelitem{\figLbls}{2})
