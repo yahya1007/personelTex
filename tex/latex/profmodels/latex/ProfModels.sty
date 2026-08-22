@@ -25,8 +25,8 @@
 \ProfLoadFigurefalse
 
 \DeclareOption{style}{\ProfLoadStyletrue}
-\DeclareOption{diagram}{\ProfLoadDiagramtrue}
-\DeclareOption{figur}{\ProfLoadFiguretrue}
+\DeclareOption{diag}{\ProfLoadDiagramtrue}
+\DeclareOption{fig}{\ProfLoadFiguretrue}
 
 \DeclareOption{all}{%
   \ProfLoadStyletrue
@@ -54,6 +54,7 @@ bottom=10mm,marginparwidth=1cm,marginparsep=2pt,noheadfoot]{geometry}
 \RequirePackage{tikz}
 \usetikzlibrary{babel} 
 \usetikzlibrary{calc}
+\usetikzlibrary{positioning}
 
 \RequirePackage[skins,breakable,raster]{tcolorbox}
 \RequirePackage{changepage}

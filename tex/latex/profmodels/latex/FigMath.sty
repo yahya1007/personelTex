@@ -1,6 +1,7 @@
 \ProvidesPackage{FigMath}
 [2026/08/18 v1.06 Extension permettant de creer des figures mathematiques]
 
+\@ifpackageloaded{etoolbox}{}{\RequirePackage{etoolbox}}
 \@ifpackageloaded{xparse}{}{\RequirePackage{xparse}}
 \RequirePackage{tkz-base}
 \RequirePackage[lua]{tkz-euclide}
@@ -264,7 +265,8 @@
 % --------------------------------------------------------------
 % \carre[labels]{cote}
 % --------------------------------------------------------------
-\NewDocumentCommand{\carre}{ O{} m }{%
+
+\NewDocumentCommand{\carre}{ O{} m O{} }{%
   \figsetdefault{#1}{A,B,C,D}{\figLbls}%
   \def\figC{#2}%
 
@@ -279,12 +281,24 @@
   \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
   \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
   \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+  
+  \ifblank{#3}%
+      {}%
+      {%
+        \tkzInterLL(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
+                   (\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
+        \tkzGetPoint{#3}%
+        \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
+         \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
+        \tkzDrawPoint(#3)%
+        \tkzLabelPoint[below](#3){#3}%
+      }%
 }
 
 % --------------------------------------------------------------
 % \rectangle[labels]{longueur}{largeur}
 % --------------------------------------------------------------
-\NewDocumentCommand{\rectangle}{ O{} m m }{%
+\NewDocumentCommand{\rectangle}{ O{} m m O{} }{%
   \figsetdefault{#1}{A,B,C,D}{\figLbls}%
   \def\figL{#2}%
   \def\figH{#3}%
@@ -300,12 +314,23 @@
   \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
   \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
   \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+   \ifblank{#4}%
+      {}%
+      {%
+        \tkzInterLL(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
+                   (\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
+        \tkzGetPoint{#4}%
+        \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
+         \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
+        \tkzDrawPoint(#4)%
+        \tkzLabelPoint[below](#4){#4}%
+      }%
 }
 
 % --------------------------------------------------------------
 % \parallelogramme[angle][labels]{base}{cote}
 % --------------------------------------------------------------
-\NewDocumentCommand{\parallelogramme}{ O{} O{} m m }{%
+\NewDocumentCommand{\parallelogramme}{ O{} O{} m m O{}}{%
   \figsetdefault{#1}{60}{\figAngle}%
   \figsetdefault{#2}{A,B,C,D}{\figLbls}%
   \def\figBase{#3}%
@@ -322,12 +347,23 @@
   \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
   \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
   \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+  \ifblank{#5}%
+      {}%
+      {%
+        \tkzInterLL(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
+                   (\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
+        \tkzGetPoint{#5}%
+        \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
+         \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
+        \tkzDrawPoint(#5)%
+        \tkzLabelPoint[below](#5){#5}%
+      }%
 }
 
 % --------------------------------------------------------------
 % \losange[angle][labels]{cote}
 % --------------------------------------------------------------
-\NewDocumentCommand{\losange}{ O{} O{} m }{%
+\NewDocumentCommand{\losange}{ O{} O{} m O{} }{%
   \figsetdefault{#1}{50}{\figAngle}%
   \figsetdefault{#2}{A,B,C,D}{\figLbls}%
   \def\figCote{#3}%
@@ -343,6 +379,17 @@
   \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
   \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
   \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+  \ifblank{#4}%
+      {}%
+      {%
+        \tkzInterLL(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
+                   (\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
+        \tkzGetPoint{#4}%
+        \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
+         \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
+        \tkzDrawPoint(#4)%
+        \tkzLabelPoint[below left=2mm and -1mm of #4](#4){#4}%
+      }%
 }
 
 % --------------------------------------------------------------
@@ -386,4 +433,70 @@
   \tkzLabelPoint[above right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
 }
 %==============================================================
+% --------------------------------------------------------------
+% \secantesParalleles*[angle][labels]{angleSecantes}{dist1}{dist2}
+% --------------------------------------------------------------
+% *        : version "papillon" (O entre les deux parallèles)
+% #1 (opt) : rotation globale en degrés (défaut 0)
+% #2 (opt) : liste des labels, par défaut O,A,B,C,D
+% #3       : angle entre les deux sécantes (défaut 40)
+% #4       : distance O -- première parallèle
+% #5       : distance O -- deuxième parallèle
+% --------------------------------------------------------------
+\NewDocumentCommand{\thales}{ s O{} O{} m m m }{%
+  \figsetdefault{#2}{0}{\figAngle}%
+  \figsetdefault{#3}{O,A,B,C,D}{\figLbls}%
+  \def\figSecAngle{#4}%
+  \def\figDistA{#5}%
+  \def\figDistB{#6}%
+
+  % Sommet O
+  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+
+  % Angle de la deuxième sécante
+  \pgfmathsetmacro{\figAngleB}{\figAngle+\figSecAngle}
+
+  \IfBooleanTF{#1}
+{% --- Configuration papillon : O entre les deux parallèles ---
+      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figDistA){\figlabelitem{\figLbls}{2}}
+      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:-\figDistB){\figlabelitem{\figLbls}{3}}
+      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngleB:\figDistA){\figlabelitem{\figLbls}{4}}
+      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngleB:-\figDistB){\figlabelitem{\figLbls}{5}}
+      % Sécantes prolongées ----------------------------
+  \tkzDrawLine[add=0.1 and 0.1](\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
+  \tkzDrawLine[add=0.1 and 0.1](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{5})
+  % Labels -----------------------------------
+  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[below right](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
+    }
+{% --- Configuration standard : O au-delà des parallèles ---
+      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figDistA){\figlabelitem{\figLbls}{2}}
+      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figDistB){\figlabelitem{\figLbls}{3}}
+      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngleB:\figDistA){\figlabelitem{\figLbls}{4}}
+      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngleB:\figDistB){\figlabelitem{\figLbls}{5}}
+     % Sécantes prolongées ---------------------
+  \tkzDrawLine[add=0.1 and 0.1](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})
+  \tkzDrawLine[add=0.1 and 0.1](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{5})
+  % Labels --------------------------------
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+  \tkzLabelPoint[above left](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
+    }
+
+  % Parallèles
+  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})
+  \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{5})
+
+  % Points
+  \tkzDrawPoints(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},
+                 \figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4},
+                 \figlabelitem{\figLbls}{5})
+
+  % Labels
+  \tkzLabelPoint[above left](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
+  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+  \tkzLabelPoint[above left](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+}%
+%============================================================
+
+
 \endinput
