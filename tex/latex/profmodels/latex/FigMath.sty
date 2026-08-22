@@ -34,8 +34,8 @@
   \figsetdefault{#2}{O}{\figLbls}%
   \def\figR{#3}%
   \def\figH{#4}%
-
-  % nom de base (calculé une seule fois)
+  % --- \figBase, \figR et \figArc sont VOLONTAIREMENT globales : ---
+  % --- \cylpoint en a besoin lors d'un appel ultérieur.        ---
   \edef\figBase{\figlabelitem{\figLbls}{1}}%
 
   % --- Centres ---
@@ -48,7 +48,7 @@
   \tkzDefShiftPoint[\figBase D](0,\figH){\figBase Dh}
   \tkzDefShiftPoint[\figBase G](0,\figH){\figBase Gh}
 
-  % --- Points avant / arrière (bas et haut) — NOUVEAU ---
+  % --- Points avant / arrière (bas et haut) ---
   \tkzDefPoint(0,-\figArc){\figBase Av}
   \tkzDefPoint(0,\figArc){\figBase Ar}
   \tkzDefShiftPoint[\figBase Av](0,\figH){\figBase Avh}
@@ -89,352 +89,430 @@
 \ExplSyntaxOn
 \NewDocumentCommand{\cylpoint}{ m m m }
   {
-    \pgfmathsetmacro{\figPX}{\figR*cos(#1)}
-    \pgfmathsetmacro{\figPY}{\figArc*sin(#1)}
-    \str_if_eq:eeTF {#2} {haut}
-      { \tkzDefShiftPoint[\figBase h](\figPX,\figPY){#3} }
-      { \tkzDefShiftPoint[\figBase](\figPX,\figPY){#3} }
+    \cs_if_exist:NTF \figBase
+      {
+        \group_begin:
+          \pgfmathsetmacro{\figPX}{\figR*cos(#1)}
+          \pgfmathsetmacro{\figPY}{\figArc*sin(#1)}
+          \str_if_eq:eeTF {#2} {haut}
+            { \tkzDefShiftPoint[\figBase h](\figPX,\figPY){#3} }
+            { \tkzDefShiftPoint[\figBase](\figPX,\figPY){#3} }
+        \group_end:
+      }
+      { \PackageError{cylindre}{\string\cylpoint~utilisé~sans~\string\cylindre~préalable}{Appelez~\string\cylindre~avant~\string\cylpoint~dans~la~même~figure.} }
   }
 \ExplSyntaxOff
-
 % --------------------------------------------------------------
 % \cube[angle][labels]{longueur}{hauteur}
 % --------------------------------------------------------------
 \NewDocumentCommand{\cube}{ O{} O{} m m }{%
-  \figsetdefault{#1}{50}{\figAngle}%
-  \figsetdefault{#2}{A,B,C,D,E,F,G,H}{\figLbls}%
-  \def\figL{#3}%
-  \def\figH{#4}%
-  \pgfmathsetmacro{\figHalfL}{0.5*(#3)}%
-  \pgfmathsetmacro{\figNegL}{-1*(#3)}%
+  \begingroup
+    \figsetdefault{#1}{50}{\figAngle}%
+    \figsetdefault{#2}{A,B,C,D,E,F,G,H}{\figLbls}%
+    \def\figL{#3}%
+    \def\figH{#4}%
+    \pgfmathsetmacro{\figHalfL}{0.5*(#3)}%
+    \pgfmathsetmacro{\figNegL}{-1*(#3)}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figL,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figHalfL){\figlabelitem{\figLbls}{3}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{3}](\figNegL,0){\figlabelitem{\figLbls}{4}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](0,\figH){\figlabelitem{\figLbls}{5}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](0,\figH){\figlabelitem{\figLbls}{6}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{3}](0,\figH){\figlabelitem{\figLbls}{7}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{4}](0,\figH){\figlabelitem{\figLbls}{8}}
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
+    \edef\figPtE{\figlabelitem{\figLbls}{5}}%
+    \edef\figPtF{\figlabelitem{\figLbls}{6}}%
+    \edef\figPtG{\figlabelitem{\figLbls}{7}}%
+    \edef\figPtH{\figlabelitem{\figLbls}{8}}%
 
-  \pgfmathparse{\figAngle < 90}
-  \ifdim\pgfmathresult pt>0.5pt
-    \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{6})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{6},\figlabelitem{\figLbls}{5})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{1})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{8})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{8},\figlabelitem{\figLbls}{7})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{7},\figlabelitem{\figLbls}{6})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{7})
-    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{8},\figlabelitem{\figLbls}{4})
-    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{4})
-    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{3})
-  \else
-    \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{6},\figlabelitem{\figLbls}{5})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{6})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{6},\figlabelitem{\figLbls}{7})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{1})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{7},\figlabelitem{\figLbls}{8})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{8})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{5})
-    \tkzDrawSegment(\figlabelitem{\figLbls}{8},\figlabelitem{\figLbls}{5})
-    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{7},\figlabelitem{\figLbls}{3})
-    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{3})
-    \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{2})
-  \fi
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figL,0){\figPtB}
+    \tkzDefShiftPoint[\figPtB](\figAngle:\figHalfL){\figPtC}
+    \tkzDefShiftPoint[\figPtC](\figNegL,0){\figPtD}
+    \tkzDefShiftPoint[\figPtA](0,\figH){\figPtE}
+    \tkzDefShiftPoint[\figPtB](0,\figH){\figPtF}
+    \tkzDefShiftPoint[\figPtC](0,\figH){\figPtG}
+    \tkzDefShiftPoint[\figPtD](0,\figH){\figPtH}
 
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{6}){\figlabelitem{\figLbls}{6}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{7}){\figlabelitem{\figLbls}{7}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{8}){\figlabelitem{\figLbls}{8}}
+    \pgfmathparse{\figAngle < 90}
+    \ifdim\pgfmathresult pt>0.5pt
+      \tkzDrawSegment(\figPtA,\figPtB)
+      \tkzDrawSegment(\figPtB,\figPtF)
+      \tkzDrawSegment(\figPtF,\figPtE)
+      \tkzDrawSegment(\figPtE,\figPtA)
+      \tkzDrawSegment(\figPtE,\figPtH)
+      \tkzDrawSegment(\figPtH,\figPtG)
+      \tkzDrawSegment(\figPtG,\figPtF)
+      \tkzDrawSegment(\figPtB,\figPtC)
+      \tkzDrawSegment(\figPtC,\figPtG)
+      \tkzDrawSegment[dashed](\figPtH,\figPtD)
+      \tkzDrawSegment[dashed](\figPtA,\figPtD)
+      \tkzDrawSegment[dashed](\figPtD,\figPtC)
+    \else
+      \tkzDrawSegment(\figPtA,\figPtB)
+      \tkzDrawSegment(\figPtF,\figPtE)
+      \tkzDrawSegment(\figPtB,\figPtF)
+      \tkzDrawSegment(\figPtF,\figPtG)
+      \tkzDrawSegment(\figPtD,\figPtA)
+      \tkzDrawSegment(\figPtG,\figPtH)
+      \tkzDrawSegment(\figPtD,\figPtH)
+      \tkzDrawSegment(\figPtA,\figPtE)
+      \tkzDrawSegment(\figPtH,\figPtE)
+      \tkzDrawSegment[dashed](\figPtG,\figPtC)
+      \tkzDrawSegment[dashed](\figPtD,\figPtC)
+      \tkzDrawSegment[dashed](\figPtC,\figPtB)
+    \fi
+
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[below](\figPtB){\figPtB}
+    \tkzLabelPoint[below](\figPtC){\figPtC}
+    \tkzLabelPoint[below](\figPtD){\figPtD}
+    \tkzLabelPoint[above](\figPtE){\figPtE}
+    \tkzLabelPoint[above](\figPtF){\figPtF}
+    \tkzLabelPoint[above](\figPtG){\figPtG}
+    \tkzLabelPoint[above](\figPtH){\figPtH}
+  \endgroup
 }
 
 % --------------------------------------------------------------
 % \prisme[angle][labels]{base}{hauteur}{angle1}{angle2}
 % --------------------------------------------------------------
 \NewDocumentCommand{\prisme}{ O{} O{} m m m m }{%
-  \figsetdefault{#1}{25}{\figAngle}%
-  \figsetdefault{#2}{A,B,C,E,F,G}{\figLbls}%
-  \def\figBase{#3}%
-  \def\figH{#4}%
-  \def\figAngA{#5}%
-  \def\figAngB{#6}%
+  \begingroup
+    \figsetdefault{#1}{25}{\figAngle}%
+    \figsetdefault{#2}{A,B,C,E,F,G}{\figLbls}%
+    \def\figBase{#3}%
+    \def\figH{#4}%
+    \def\figAngA{#5}%
+    \def\figAngB{#6}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefTriangle[two angles={\figAngA} and {\figAngB}](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzGetPoint{\figlabelitem{\figLbls}{3}}
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
+    \edef\figPtE{\figlabelitem{\figLbls}{5}}%
+    \edef\figPtF{\figlabelitem{\figLbls}{6}}%
 
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figH){\figlabelitem{\figLbls}{4}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figH){\figlabelitem{\figLbls}{5}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{3}](\figAngle:\figH){\figlabelitem{\figLbls}{6}}
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figBase,0){\figPtB}
+    \tkzDefTriangle[two angles={\figAngA} and {\figAngB}](\figPtA,\figPtB)
+    \tkzGetPoint{\figPtC}
 
-  \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{1})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{5})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{6})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{6})
-  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{4})
-  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{6})
-  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{5})
+    \tkzDefShiftPoint[\figPtA](\figAngle:\figH){\figPtD}
+    \tkzDefShiftPoint[\figPtB](\figAngle:\figH){\figPtE}
+    \tkzDefShiftPoint[\figPtC](\figAngle:\figH){\figPtF}
 
-  \tkzLabelPoint[below left](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[left](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
-  \tkzLabelPoint[right](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{6}){\figlabelitem{\figLbls}{6}}
+    \tkzDrawSegment(\figPtA,\figPtB)
+    \tkzDrawSegment(\figPtB,\figPtC)
+    \tkzDrawSegment(\figPtC,\figPtA)
+    \tkzDrawSegment(\figPtB,\figPtE)
+    \tkzDrawSegment(\figPtC,\figPtF)
+    \tkzDrawSegment(\figPtE,\figPtF)
+    \tkzDrawSegment[dashed](\figPtA,\figPtD)
+    \tkzDrawSegment[dashed](\figPtD,\figPtF)
+    \tkzDrawSegment[dashed](\figPtD,\figPtE)
+
+    \tkzLabelPoint[below left](\figPtA){\figPtA}
+    \tkzLabelPoint[below right](\figPtB){\figPtB}
+    \tkzLabelPoint[above](\figPtC){\figPtC}
+    \tkzLabelPoint[left](\figPtD){\figPtD}
+    \tkzLabelPoint[right](\figPtE){\figPtE}
+    \tkzLabelPoint[above](\figPtF){\figPtF}
+  \endgroup
 }
 
 % --------------------------------------------------------------
 % \pyramide[angle][labels]{base}{angleSommet1}{angleSommet2}
 % --------------------------------------------------------------
 \NewDocumentCommand{\pyramide}{ O{} O{} m m m }{%
-  \figsetdefault{#1}{30}{\figAngle}%
-  \figsetdefault{#2}{A,B,C,D,S}{\figLbls}%
-  \def\figBase{#3}%
-  \pgfmathsetmacro{\figProf}{0.75*(#3)}%
-  \def\figSomA{#4}%
-  \def\figSomB{#5}%
+  \begingroup
+    \figsetdefault{#1}{30}{\figAngle}%
+    \figsetdefault{#2}{A,B,C,D,S}{\figLbls}%
+    \def\figBase{#3}%
+    \pgfmathsetmacro{\figProf}{0.75*(#3)}%
+    \def\figSomA{#4}%
+    \def\figSomB{#5}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figProf){\figlabelitem{\figLbls}{3}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figProf){\figlabelitem{\figLbls}{4}}
-  \tkzDefTriangle[two angles={\figSomA} and {\figSomB}](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzGetPoint{\figlabelitem{\figLbls}{5}}
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
+    \edef\figPtS{\figlabelitem{\figLbls}{5}}%
 
-  \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{5})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{2})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{1})
-  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{4})
-  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{5},\figlabelitem{\figLbls}{4})
-  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{3})
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figBase,0){\figPtB}
+    \tkzDefShiftPoint[\figPtB](\figAngle:\figProf){\figPtC}
+    \tkzDefShiftPoint[\figPtA](\figAngle:\figProf){\figPtD}
+    \tkzDefTriangle[two angles={\figSomA} and {\figSomB}](\figPtA,\figPtB)
+    \tkzGetPoint{\figPtS}
 
-  \tkzLabelPoint[below left](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[right](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[above left](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
+    \tkzDrawSegment(\figPtA,\figPtB)
+    \tkzDrawSegment(\figPtB,\figPtC)
+    \tkzDrawSegment(\figPtC,\figPtS)
+    \tkzDrawSegment(\figPtS,\figPtB)
+    \tkzDrawSegment(\figPtS,\figPtA)
+    \tkzDrawSegment[dashed](\figPtA,\figPtD)
+    \tkzDrawSegment[dashed](\figPtS,\figPtD)
+    \tkzDrawSegment[dashed](\figPtD,\figPtC)
+
+    \tkzLabelPoint[below left](\figPtA){\figPtA}
+    \tkzLabelPoint[below right](\figPtB){\figPtB}
+    \tkzLabelPoint[right](\figPtC){\figPtC}
+    \tkzLabelPoint[above left](\figPtD){\figPtD}
+    \tkzLabelPoint[above](\figPtS){\figPtS}
+  \endgroup
 }
 
 % --------------------------------------------------------------
 % \tetra[angle][labels]{base}{angleSommet1}{angleSommet2}
 % --------------------------------------------------------------
 \NewDocumentCommand{\tetra}{ O{} O{} m m m }{%
-  \figsetdefault{#1}{30}{\figAngle}%
-  \figsetdefault{#2}{A,B,C,S}{\figLbls}%
-  \def\figBase{#3}%
-  \pgfmathsetmacro{\figProf}{0.5*(#3)}%
-  \def\figSomA{#4}%
-  \def\figSomB{#5}%
+  \begingroup
+    \figsetdefault{#1}{30}{\figAngle}%
+    \figsetdefault{#2}{A,B,C,S}{\figLbls}%
+    \def\figBase{#3}%
+    \pgfmathsetmacro{\figProf}{0.5*(#3)}%
+    \def\figSomA{#4}%
+    \def\figSomB{#5}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figProf){\figlabelitem{\figLbls}{3}}
-  \tkzDefTriangle[two angles={\figSomA} and {\figSomB}](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzGetPoint{\figlabelitem{\figLbls}{4}}
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtS{\figlabelitem{\figLbls}{4}}%
 
-  \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{2})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{1})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{3})
-  \tkzDrawSegment[dashed](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figBase,0){\figPtB}
+    \tkzDefShiftPoint[\figPtB](\figAngle:\figProf){\figPtC}
+    \tkzDefTriangle[two angles={\figSomA} and {\figSomB}](\figPtA,\figPtB)
+    \tkzGetPoint{\figPtS}
 
-  \tkzLabelPoint[left](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[right](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+    \tkzDrawSegment(\figPtA,\figPtB)
+    \tkzDrawSegment(\figPtS,\figPtB)
+    \tkzDrawSegment(\figPtS,\figPtA)
+    \tkzDrawSegment(\figPtB,\figPtC)
+    \tkzDrawSegment(\figPtS,\figPtC)
+    \tkzDrawSegment[dashed](\figPtA,\figPtC)
+
+    \tkzLabelPoint[left](\figPtA){\figPtA}
+    \tkzLabelPoint[right](\figPtB){\figPtB}
+    \tkzLabelPoint[right](\figPtC){\figPtC}
+    \tkzLabelPoint[above](\figPtS){\figPtS}
+  \endgroup
 }
 
 % ==============================================================
 %                    FIGURES PLANES
 % ==============================================================
-
 % --------------------------------------------------------------
-% \carre[labels]{cote}
+% \carre[labels]{cote}[nom_centre]
 % --------------------------------------------------------------
-
 \NewDocumentCommand{\carre}{ O{} m O{} }{%
-  \figsetdefault{#1}{A,B,C,D}{\figLbls}%
-  \def\figC{#2}%
+  \begingroup
+    \figsetdefault{#1}{A,B,C,D}{\figLbls}%
+    \def\figC{#2}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figC,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](90:\figC){\figlabelitem{\figLbls}{3}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](90:\figC){\figlabelitem{\figLbls}{4}}
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
 
-  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4})
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figC,0){\figPtB}
+    \tkzDefShiftPoint[\figPtB](90:\figC){\figPtC}
+    \tkzDefShiftPoint[\figPtA](90:\figC){\figPtD}
 
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
-  
-  \ifblank{#3}%
-      {}%
-      {%
-        \tkzInterLL(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
-                   (\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
-        \tkzGetPoint{#3}%
-        \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
-         \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
-        \tkzDrawPoint(#3)%
-        \tkzLabelPoint[below](#3){#3}%
-      }%
+    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC,\figPtD)
+
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[below](\figPtB){\figPtB}
+    \tkzLabelPoint[above](\figPtC){\figPtC}
+    \tkzLabelPoint[above](\figPtD){\figPtD}
+
+    \ifblank{#3}%
+        {}%
+        {%
+          \tkzInterLL(\figPtA,\figPtC)(\figPtB,\figPtD)%
+          \tkzGetPoint{#3}%
+          \tkzDrawSegment(\figPtA,\figPtC)%
+          \tkzDrawSegment(\figPtB,\figPtD)%
+          \tkzDrawPoint(#3)%
+          \tkzLabelPoint[below](#3){#3}%
+        }%
+  \endgroup
 }
 
 % --------------------------------------------------------------
-% \rectangle[labels]{longueur}{largeur}
+% \rectangle[labels]{longueur}{largeur}[nom_centre]
 % --------------------------------------------------------------
 \NewDocumentCommand{\rectangle}{ O{} m m O{} }{%
-  \figsetdefault{#1}{A,B,C,D}{\figLbls}%
-  \def\figL{#2}%
-  \def\figH{#3}%
+  \begingroup
+    \figsetdefault{#1}{A,B,C,D}{\figLbls}%
+    \def\figL{#2}%
+    \def\figH{#3}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figL,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](90:\figH){\figlabelitem{\figLbls}{3}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](90:\figH){\figlabelitem{\figLbls}{4}}
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
 
-  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4})
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figL,0){\figPtB}
+    \tkzDefShiftPoint[\figPtB](90:\figH){\figPtC}
+    \tkzDefShiftPoint[\figPtA](90:\figH){\figPtD}
 
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
-   \ifblank{#4}%
-      {}%
-      {%
-        \tkzInterLL(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
-                   (\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
-        \tkzGetPoint{#4}%
-        \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
-         \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
-        \tkzDrawPoint(#4)%
-        \tkzLabelPoint[below](#4){#4}%
-      }%
+    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC,\figPtD)
+
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[below](\figPtB){\figPtB}
+    \tkzLabelPoint[above](\figPtC){\figPtC}
+    \tkzLabelPoint[above](\figPtD){\figPtD}
+
+    \ifblank{#4}%
+        {}%
+        {%
+          \tkzInterLL(\figPtA,\figPtC)(\figPtB,\figPtD)%
+          \tkzGetPoint{#4}%
+          \tkzDrawSegment(\figPtA,\figPtC)%
+          \tkzDrawSegment(\figPtB,\figPtD)%
+          \tkzDrawPoint(#4)%
+          \tkzLabelPoint[below](#4){#4}%
+        }%
+  \endgroup
 }
 
 % --------------------------------------------------------------
-% \parallelogramme[angle][labels]{base}{cote}
+% \parallelogramme[angle][labels]{base}{cote}[nom_centre]
 % --------------------------------------------------------------
 \NewDocumentCommand{\parallelogramme}{ O{} O{} m m O{}}{%
-  \figsetdefault{#1}{60}{\figAngle}%
-  \figsetdefault{#2}{A,B,C,D}{\figLbls}%
-  \def\figBase{#3}%
-  \def\figCote{#4}%
+  \begingroup
+    \figsetdefault{#1}{60}{\figAngle}%
+    \figsetdefault{#2}{A,B,C,D}{\figLbls}%
+    \def\figBase{#3}%
+    \def\figCote{#4}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figCote){\figlabelitem{\figLbls}{4}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figCote){\figlabelitem{\figLbls}{3}}
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
 
-  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4})
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figBase,0){\figPtB}
+    \tkzDefShiftPoint[\figPtA](\figAngle:\figCote){\figPtD}
+    \tkzDefShiftPoint[\figPtB](\figAngle:\figCote){\figPtC}
 
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
-  \ifblank{#5}%
-      {}%
-      {%
-        \tkzInterLL(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
-                   (\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
-        \tkzGetPoint{#5}%
-        \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
-         \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
-        \tkzDrawPoint(#5)%
-        \tkzLabelPoint[below](#5){#5}%
-      }%
+    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC,\figPtD)
+
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[below](\figPtB){\figPtB}
+    \tkzLabelPoint[above](\figPtC){\figPtC}
+    \tkzLabelPoint[above](\figPtD){\figPtD}
+
+    \ifblank{#5}%
+        {}%
+        {%
+          \tkzInterLL(\figPtA,\figPtC)(\figPtB,\figPtD)%
+          \tkzGetPoint{#5}%
+          \tkzDrawSegment(\figPtA,\figPtC)%
+          \tkzDrawSegment(\figPtB,\figPtD)%
+          \tkzDrawPoint(#5)%
+          \tkzLabelPoint[below](#5){#5}%
+        }%
+  \endgroup
 }
 
 % --------------------------------------------------------------
-% \losange[angle][labels]{cote}
+% \losange[angle][labels]{cote}[nom_centre]
 % --------------------------------------------------------------
 \NewDocumentCommand{\losange}{ O{} O{} m O{} }{%
-  \figsetdefault{#1}{50}{\figAngle}%
-  \figsetdefault{#2}{A,B,C,D}{\figLbls}%
-  \def\figCote{#3}%
+  \begingroup
+    \figsetdefault{#1}{50}{\figAngle}%
+    \figsetdefault{#2}{A,B,C,D}{\figLbls}%
+    \def\figCote{#3}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figCote,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figCote){\figlabelitem{\figLbls}{4}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{2}](\figAngle:\figCote){\figlabelitem{\figLbls}{3}}
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
 
-  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4})
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figCote,0){\figPtB}
+    \tkzDefShiftPoint[\figPtA](\figAngle:\figCote){\figPtD}
+    \tkzDefShiftPoint[\figPtB](\figAngle:\figCote){\figPtC}
 
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
-  \ifblank{#4}%
-      {}%
-      {%
-        \tkzInterLL(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
-                   (\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
-        \tkzGetPoint{#4}%
-        \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})%
-         \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})%
-        \tkzDrawPoint(#4)%
-        \tkzLabelPoint[below left=2mm and -1mm of #4](#4){#4}%
-      }%
+    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC,\figPtD)
+
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[below](\figPtB){\figPtB}
+    \tkzLabelPoint[above](\figPtC){\figPtC}
+    \tkzLabelPoint[above](\figPtD){\figPtD}
+
+    \ifblank{#4}%
+        {}%
+        {%
+          \tkzInterLL(\figPtA,\figPtC)(\figPtB,\figPtD)%
+          \tkzGetPoint{#4}%
+          \tkzDrawSegment(\figPtA,\figPtC)%
+          \tkzDrawSegment(\figPtB,\figPtD)%
+          \tkzDrawPoint(#4)%
+          \tkzLabelPoint[below left=2mm and -1mm of #4](#4){#4}%
+        }%
+  \endgroup
 }
 
 % --------------------------------------------------------------
 % \Triangle[angleA][labels]{base}{angleB}
 % --------------------------------------------------------------
 \NewDocumentCommand{\Triangle}{ O{} O{} m m }{%
-  \figsetdefault{#1}{60}{\figAngleA}%
-  \figsetdefault{#2}{A,B,C}{\figLbls}%
-  \def\figBase{#3}%
-  \def\figAngleB{#4}%
+  \begingroup
+    \figsetdefault{#1}{60}{\figAngleA}%
+    \figsetdefault{#2}{A,B,C}{\figLbls}%
+    \def\figBase{#3}%
+    \def\figAngleB{#4}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figBase,0){\figlabelitem{\figLbls}{2}}
-  \tkzDefTriangle[two angles={\figAngleA} and {\figAngleB}](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzGetPoint{\figlabelitem{\figLbls}{3}}
+    % noms de points calculés une seule fois
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
 
-  \tkzDrawPolygon(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figBase,0){\figPtB}
+    \tkzDefTriangle[two angles={\figAngleA} and {\figAngleB}](\figPtA,\figPtB)
+    \tkzGetPoint{\figPtC}
 
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
+    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC)
+
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[below](\figPtB){\figPtB}
+    \tkzLabelPoint[above](\figPtC){\figPtC}
+  \endgroup
 }
 
 % --------------------------------------------------------------
 % \cercle[angle][labels]{rayon}
 % --------------------------------------------------------------
 \NewDocumentCommand{\cercle}{ O{} O{} m }{%
-  \figsetdefault{#1}{30}{\figAngle}%
-  \figsetdefault{#2}{O,A}{\figLbls}%
-  \def\figR{#3}%
+  \begingroup
+    \figsetdefault{#1}{30}{\figAngle}%
+    \figsetdefault{#2}{O,A}{\figLbls}%
+    \def\figR{#3}%
 
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
-  \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figR){\figlabelitem{\figLbls}{2}}
+    % Noms de points calculés une seule fois
+    \edef\figPtO{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtA{\figlabelitem{\figLbls}{2}}%
 
-  \tkzDrawCircle(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2})
-  \tkzDrawPoint(\figlabelitem{\figLbls}{1})
-  \tkzDrawPoint(\figlabelitem{\figLbls}{2})
+    \tkzDefPoint(0,0){\figPtO}
+    \tkzDefShiftPoint[\figPtO](\figAngle:\figR){\figPtA}
 
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[above right](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
+    \tkzDrawCircle(\figPtO,\figPtA)
+    \tkzDrawSegment(\figPtO,\figPtA)
+    \tkzDrawPoint(\figPtO)
+    \tkzDrawPoint(\figPtA)
+
+    \tkzLabelPoint[below](\figPtO){\figPtO}
+    \tkzLabelPoint[above right](\figPtA){\figPtA}
+  \endgroup
 }
 %==============================================================
 % --------------------------------------------------------------
-% \secantesParalleles*[angle][labels]{angleSecantes}{dist1}{dist2}
+% \thales*[angle][labels]{angleSecantes}{dist1}{dist2}
 % --------------------------------------------------------------
 % *        : version "papillon" (O entre les deux parallèles)
 % #1 (opt) : rotation globale en degrés (défaut 0)
@@ -444,57 +522,64 @@
 % #5       : distance O -- deuxième parallèle
 % --------------------------------------------------------------
 \NewDocumentCommand{\thales}{ s O{} O{} m m m }{%
-  \figsetdefault{#2}{0}{\figAngle}%
-  \figsetdefault{#3}{O,A,B,C,D}{\figLbls}%
-  \def\figSecAngle{#4}%
-  \def\figDistA{#5}%
-  \def\figDistB{#6}%
+  \begingroup
+    \figsetdefault{#2}{0}{\figAngle}%
+    \figsetdefault{#3}{O,A,B,C,D}{\figLbls}%
+    \def\figSecAngle{#4}%
+    \def\figDistA{#5}%
+    \def\figDistB{#6}%
 
-  % Sommet O
-  \tkzDefPoint(0,0){\figlabelitem{\figLbls}{1}}
+    % Noms de points calculés une seule fois
+    \edef\figPtO{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtA{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{4}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{5}}%
 
-  % Angle de la deuxième sécante
-  \pgfmathsetmacro{\figAngleB}{\figAngle+\figSecAngle}
+    % Sommet O
+    \tkzDefPoint(0,0){\figPtO}
 
-  \IfBooleanTF{#1}
-{% --- Configuration papillon : O entre les deux parallèles ---
-      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figDistA){\figlabelitem{\figLbls}{2}}
-      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:-\figDistB){\figlabelitem{\figLbls}{3}}
-      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngleB:\figDistA){\figlabelitem{\figLbls}{4}}
-      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngleB:-\figDistB){\figlabelitem{\figLbls}{5}}
-      % Sécantes prolongées ----------------------------
-  \tkzDrawLine[add=0.1 and 0.1](\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{3})
-  \tkzDrawLine[add=0.1 and 0.1](\figlabelitem{\figLbls}{4},\figlabelitem{\figLbls}{5})
-  % Labels -----------------------------------
-  \tkzLabelPoint[above](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[below right](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
-    }
-{% --- Configuration standard : O au-delà des parallèles ---
-      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figDistA){\figlabelitem{\figLbls}{2}}
-      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngle:\figDistB){\figlabelitem{\figLbls}{3}}
-      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngleB:\figDistA){\figlabelitem{\figLbls}{4}}
-      \tkzDefShiftPoint[\figlabelitem{\figLbls}{1}](\figAngleB:\figDistB){\figlabelitem{\figLbls}{5}}
-     % Sécantes prolongées ---------------------
-  \tkzDrawLine[add=0.1 and 0.1](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{3})
-  \tkzDrawLine[add=0.1 and 0.1](\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{5})
-  % Labels --------------------------------
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{3}){\figlabelitem{\figLbls}{3}}
-  \tkzLabelPoint[above left](\figlabelitem{\figLbls}{5}){\figlabelitem{\figLbls}{5}}
-    }
+    % Angle de la deuxième sécante
+    \pgfmathsetmacro{\figAngleB}{\figAngle+\figSecAngle}%
 
-  % Parallèles
-  \tkzDrawSegment(\figlabelitem{\figLbls}{2},\figlabelitem{\figLbls}{4})
-  \tkzDrawSegment(\figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{5})
+    \IfBooleanTF{#1}
+      {% --- Configuration papillon : O entre les deux parallèles ---
+        \tkzDefShiftPoint[\figPtO](\figAngle:\figDistA){\figPtA}
+        \tkzDefShiftPoint[\figPtO](\figAngle:-\figDistB){\figPtB}
+        \tkzDefShiftPoint[\figPtO](\figAngleB:\figDistA){\figPtC}
+        \tkzDefShiftPoint[\figPtO](\figAngleB:-\figDistB){\figPtD}
+        % Sécantes prolongées ----------------------------
+        \tkzDrawLine[add=0.1 and 0.1](\figPtA,\figPtB)
+        \tkzDrawLine[add=0.1 and 0.1](\figPtC,\figPtD)
+        % Labels -----------------------------------
+        \tkzLabelPoint[above](\figPtB){\figPtB}
+        \tkzLabelPoint[below right](\figPtD){\figPtD}
+      }
+      {% --- Configuration standard : O au-delà des parallèles ---
+        \tkzDefShiftPoint[\figPtO](\figAngle:\figDistA){\figPtA}
+        \tkzDefShiftPoint[\figPtO](\figAngle:\figDistB){\figPtB}
+        \tkzDefShiftPoint[\figPtO](\figAngleB:\figDistA){\figPtC}
+        \tkzDefShiftPoint[\figPtO](\figAngleB:\figDistB){\figPtD}
+        % Sécantes prolongées ---------------------
+        \tkzDrawLine[add=0.1 and 0.1](\figPtO,\figPtB)
+        \tkzDrawLine[add=0.1 and 0.1](\figPtO,\figPtD)
+        % Labels --------------------------------
+        \tkzLabelPoint[below](\figPtB){\figPtB}
+        \tkzLabelPoint[above left](\figPtD){\figPtD}
+      }%
 
-  % Points
-  \tkzDrawPoints(\figlabelitem{\figLbls}{1},\figlabelitem{\figLbls}{2},
-                 \figlabelitem{\figLbls}{3},\figlabelitem{\figLbls}{4},
-                 \figlabelitem{\figLbls}{5})
+    % Parallèles
+    \tkzDrawSegment(\figPtA,\figPtC)
+    \tkzDrawSegment(\figPtB,\figPtD)
 
-  % Labels
-  \tkzLabelPoint[above left](\figlabelitem{\figLbls}{1}){\figlabelitem{\figLbls}{1}}
-  \tkzLabelPoint[below](\figlabelitem{\figLbls}{2}){\figlabelitem{\figLbls}{2}}
-  \tkzLabelPoint[above left](\figlabelitem{\figLbls}{4}){\figlabelitem{\figLbls}{4}}
+    % Points
+    \tkzDrawPoints(\figPtO,\figPtA,\figPtB,\figPtC,\figPtD)
+
+    % Labels
+    \tkzLabelPoint[above left](\figPtO){\figPtO}
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[above left](\figPtC){\figPtC}
+  \endgroup
 }%
 %============================================================
 
