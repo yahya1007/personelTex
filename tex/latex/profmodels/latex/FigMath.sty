@@ -301,6 +301,28 @@
 % ==============================================================
 %                    FIGURES PLANES
 % ==============================================================
+\ExplSyntaxOn
+% --------------------------------------------------------------
+\NewDocumentCommand{\FigQuadrilatere}{ m m m m m m }
+  {
+    \tkzDrawPolygon(#1,#2,#3,#4)
+
+    \tkzLabelPoint[below](#1){#1}
+    \tkzLabelPoint[below](#2){#2}
+    \tkzLabelPoint[above](#3){#3}
+    \tkzLabelPoint[above](#4){#4}
+
+    \tl_if_blank:nF {#5}
+      {
+        \tkzInterLL(#1,#3)(#2,#4)
+        \tkzGetPoint{#5}
+        \tkzDrawSegment(#1,#3)
+        \tkzDrawSegment(#2,#4)
+        \tkzDrawPoint(#5)
+        \tkzLabelPoint[#6](#5){#5}
+      }
+  }%
+\ExplSyntaxOff
 % --------------------------------------------------------------
 % \carre[labels]{cote}[nom_centre]
 % --------------------------------------------------------------
@@ -319,23 +341,7 @@
     \tkzDefShiftPoint[\figPtB](90:\figC){\figPtC}
     \tkzDefShiftPoint[\figPtA](90:\figC){\figPtD}
 
-    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC,\figPtD)
-
-    \tkzLabelPoint[below](\figPtA){\figPtA}
-    \tkzLabelPoint[below](\figPtB){\figPtB}
-    \tkzLabelPoint[above](\figPtC){\figPtC}
-    \tkzLabelPoint[above](\figPtD){\figPtD}
-
-    \ifblank{#3}%
-        {}%
-        {%
-          \tkzInterLL(\figPtA,\figPtC)(\figPtB,\figPtD)%
-          \tkzGetPoint{#3}%
-          \tkzDrawSegment(\figPtA,\figPtC)%
-          \tkzDrawSegment(\figPtB,\figPtD)%
-          \tkzDrawPoint(#3)%
-          \tkzLabelPoint[below](#3){#3}%
-        }%
+    \FigQuadrilatere{\figPtA}{\figPtB}{\figPtC}{\figPtD}{#3}{below}
   \endgroup
 }
 
@@ -358,23 +364,7 @@
     \tkzDefShiftPoint[\figPtB](90:\figH){\figPtC}
     \tkzDefShiftPoint[\figPtA](90:\figH){\figPtD}
 
-    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC,\figPtD)
-
-    \tkzLabelPoint[below](\figPtA){\figPtA}
-    \tkzLabelPoint[below](\figPtB){\figPtB}
-    \tkzLabelPoint[above](\figPtC){\figPtC}
-    \tkzLabelPoint[above](\figPtD){\figPtD}
-
-    \ifblank{#4}%
-        {}%
-        {%
-          \tkzInterLL(\figPtA,\figPtC)(\figPtB,\figPtD)%
-          \tkzGetPoint{#4}%
-          \tkzDrawSegment(\figPtA,\figPtC)%
-          \tkzDrawSegment(\figPtB,\figPtD)%
-          \tkzDrawPoint(#4)%
-          \tkzLabelPoint[below](#4){#4}%
-        }%
+    \FigQuadrilatere{\figPtA}{\figPtB}{\figPtC}{\figPtD}{#4}{below}
   \endgroup
 }
 
@@ -398,23 +388,7 @@
     \tkzDefShiftPoint[\figPtA](\figAngle:\figCote){\figPtD}
     \tkzDefShiftPoint[\figPtB](\figAngle:\figCote){\figPtC}
 
-    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC,\figPtD)
-
-    \tkzLabelPoint[below](\figPtA){\figPtA}
-    \tkzLabelPoint[below](\figPtB){\figPtB}
-    \tkzLabelPoint[above](\figPtC){\figPtC}
-    \tkzLabelPoint[above](\figPtD){\figPtD}
-
-    \ifblank{#5}%
-        {}%
-        {%
-          \tkzInterLL(\figPtA,\figPtC)(\figPtB,\figPtD)%
-          \tkzGetPoint{#5}%
-          \tkzDrawSegment(\figPtA,\figPtC)%
-          \tkzDrawSegment(\figPtB,\figPtD)%
-          \tkzDrawPoint(#5)%
-          \tkzLabelPoint[below](#5){#5}%
-        }%
+    \FigQuadrilatere{\figPtA}{\figPtB}{\figPtC}{\figPtD}{#5}{below}
   \endgroup
 }
 
@@ -437,23 +411,7 @@
     \tkzDefShiftPoint[\figPtA](\figAngle:\figCote){\figPtD}
     \tkzDefShiftPoint[\figPtB](\figAngle:\figCote){\figPtC}
 
-    \tkzDrawPolygon(\figPtA,\figPtB,\figPtC,\figPtD)
-
-    \tkzLabelPoint[below](\figPtA){\figPtA}
-    \tkzLabelPoint[below](\figPtB){\figPtB}
-    \tkzLabelPoint[above](\figPtC){\figPtC}
-    \tkzLabelPoint[above](\figPtD){\figPtD}
-
-    \ifblank{#4}%
-        {}%
-        {%
-          \tkzInterLL(\figPtA,\figPtC)(\figPtB,\figPtD)%
-          \tkzGetPoint{#4}%
-          \tkzDrawSegment(\figPtA,\figPtC)%
-          \tkzDrawSegment(\figPtB,\figPtD)%
-          \tkzDrawPoint(#4)%
-          \tkzLabelPoint[below left=2mm and -1mm of #4](#4){#4}%
-        }%
+    \FigQuadrilatere{\figPtA}{\figPtB}{\figPtC}{\figPtD}{#4}{below left=2mm and -1mm of #4}
   \endgroup
 }
 
