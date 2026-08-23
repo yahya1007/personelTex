@@ -102,6 +102,64 @@
       { \PackageError{cylindre}{\string\cylpoint~utilisé~sans~\string\cylindre~préalable}{Appelez~\string\cylindre~avant~\string\cylpoint~dans~la~même~figure.} }
   }
 \ExplSyntaxOff
+%=============================================================
+% --------------------------------------------------------------
+% \cone*[arc][labels]{rayon}{hauteur}
+% * : affiche le tracé du rayon OB
+% labels par défaut : O (centre base), S (sommet), A, B (points sur la base)
+% --------------------------------------------------------------
+\NewDocumentCommand{\cone}{ s O{} O{} m m }{%
+  \begingroup
+    \figsetdefault{#2}{0.5}{\figArc}%
+    \figsetdefault{#3}{O,S,A,B}{\figLbls}%
+    \def\figR{#4}%
+    \def\figH{#5}%
+
+    \edef\figPtO{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtS{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtA{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{4}}%
+
+    \tkzDefPoint(0,0){\figPtO}
+    \tkzDefShiftPoint[\figPtO](0,\figH){\figPtS}
+    \tkzDefPoint(\figR,0){\figPtB}
+    \tkzDefPoint(-\figR,0){\figPtA}
+
+    % --- Génératrices visibles ---
+    \tkzDrawSegment(\figPtA,\figPtS)
+    \tkzDrawSegment(\figPtB,\figPtS)
+
+    % --- Rayon (base à base), désactivable ---
+    \IfBooleanT{#1}{%
+      \tkzDrawSegment[dashed](\figPtO,\figPtB)
+      \tkzDrawSegment[dashed](\figPtO,\figPtS)
+       \tkzDrawPoint(\figPtA)
+    \tkzDrawPoint(\figPtB)
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[below](\figPtB){\figPtB}
+    }%
+
+    % --- Ellipse de base : moitié cachée ---
+    \begin{scope}
+      \clip (-\figR-0.1,0) rectangle (\figR+0.1,\figArc+0.1);
+      \tkzDrawEllipse[dashed](\figPtO,\figR cm,\figArc cm,0)
+    \end{scope}
+
+    % --- Ellipse de base : moitié visible ---
+    \begin{scope}
+      \clip (-\figR-0.1,-\figArc-0.1) rectangle (\figR+0.1,0);
+      \tkzDrawEllipse[thick](\figPtO,\figR cm,\figArc cm,0)
+    \end{scope}
+
+    \tkzDrawPoint(\figPtO)
+    \tkzDrawPoint(\figPtS)
+   
+
+    \tkzLabelPoint[below](\figPtO){\figPtO}
+    \tkzLabelPoint[above](\figPtS){\figPtS}
+    
+  \endgroup
+}
 % --------------------------------------------------------------
 % \cube[angle][labels]{longueur}{hauteur}
 % --------------------------------------------------------------
@@ -413,22 +471,52 @@
 
     \FigQuadrilatere{\figPtA}{\figPtB}{\figPtC}{\figPtD}{#4}{below left=2mm and -1mm of #4}
   \endgroup
-}
+}%
+%=========================================================
+% --------------------------------------------------------------
+% \trapeze[angle][labels]{grande_base}{petite_base}{hauteur}[nom_centre]
+% angle = angle en A entre la grande base et le côté oblique AD
+% --------------------------------------------------------------
+\NewDocumentCommand{\trapeze}{ O{} O{} m m m O{} }{%
+  \begingroup
+    \figsetdefault{#1}{70}{\figAngle}%
+    \figsetdefault{#2}{A,B,C,D}{\figLbls}%
+    \def\figBase{#3}%
+    \def\figPetiteBase{#4}%
+    \def\figH{#5}%
+    \pgfmathsetmacro{\figAD}{\figH/sin(\figAngle)}%
 
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
+
+    \tkzDefPoint(0,0){\figPtA}
+    \tkzDefShiftPoint[\figPtA](\figBase,0){\figPtB}
+    \tkzDefShiftPoint[\figPtA](\figAngle:\figAD){\figPtD}
+    \tkzDefShiftPoint[\figPtD](\figPetiteBase,0){\figPtC}
+
+    \FigQuadrilatere{\figPtA}{\figPtB}{\figPtC}{\figPtD}{#6}{below}
+  \endgroup
+}%
+%==============================================================
 % --------------------------------------------------------------
 % \Triangle[angleA][labels]{base}{angleB}
+% \Triangle*[angleA][labels]{base}{angleB}
 % --------------------------------------------------------------
-\NewDocumentCommand{\Triangle}{ O{} O{} m m }{%
+\NewDocumentCommand{\Triangle}{ s O{} O{} m m }{%
   \begingroup
-    \figsetdefault{#1}{60}{\figAngleA}%
-    \figsetdefault{#2}{A,B,C}{\figLbls}%
-    \def\figBase{#3}%
-    \def\figAngleB{#4}%
+    \figsetdefault{#2}{60}{\figAngleA}%
+    \figsetdefault{#3}{A,B,C,H}{\figLbls}%
+    \def\figBase{#4}%
+    \def\figAngleB{#5}%
+    \pgfmathsetmacro{\figAngleC}{180-\figAngleA-\figAngleB}%
 
     % noms de points calculés une seule fois
     \edef\figPtA{\figlabelitem{\figLbls}{1}}%
     \edef\figPtB{\figlabelitem{\figLbls}{2}}%
     \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtH{\figlabelitem{\figLbls}{4}}%
 
     \tkzDefPoint(0,0){\figPtA}
     \tkzDefShiftPoint[\figPtA](\figBase,0){\figPtB}
@@ -436,6 +524,38 @@
     \tkzGetPoint{\figPtC}
 
     \tkzDrawPolygon(\figPtA,\figPtB,\figPtC)
+
+    \IfBooleanT{#1}{%
+      \pgfmathparse{abs(\figAngleA-90)<0.01}%
+      \ifdim\pgfmathresult pt>0.5pt
+        \tkzDefPointBy[projection= onto \figPtB --\figPtC](\figPtA)
+        \tkzGetPoint{\figPtH}
+        \tkzDrawSegment[dashed](\figPtA,\figPtH)
+        \tkzMarkRightAngle(\figPtA,\figPtH,\figPtB)
+        \tkzDrawPoint(\figPtH)
+        \tkzLabelPoint[above right](\figPtH){\figPtH}
+      \else
+        \pgfmathparse{abs(\figAngleB-90)<0.01}%
+        \ifdim\pgfmathresult pt>0.5pt
+          \tkzDefPointBy[projection= onto \figPtA --\figPtC](\figPtB)
+          \tkzGetPoint{\figPtH}
+          \tkzDrawSegment[dashed](\figPtB,\figPtH)
+          \tkzMarkRightAngle(\figPtB,\figPtH,\figPtA)
+          \tkzDrawPoint(\figPtH)
+          \tkzLabelPoint[above left](\figPtH){\figPtH}
+        \else
+          \pgfmathparse{abs(\figAngleC-90)<0.01}%
+          \ifdim\pgfmathresult pt>0.5pt
+            \tkzDefPointBy[projection= onto \figPtA --\figPtB](\figPtC)
+            \tkzGetPoint{\figPtH}
+            \tkzDrawSegment[dashed](\figPtC,\figPtH)
+            \tkzMarkRightAngle(\figPtC,\figPtH,\figPtB)
+            \tkzDrawPoint(\figPtH)
+            \tkzLabelPoint[below](\figPtH){\figPtH}
+          \fi
+        \fi
+      \fi
+    }%
 
     \tkzLabelPoint[below](\figPtA){\figPtA}
     \tkzLabelPoint[below](\figPtB){\figPtB}
@@ -446,11 +566,11 @@
 % --------------------------------------------------------------
 % \cercle[angle][labels]{rayon}
 % --------------------------------------------------------------
-\NewDocumentCommand{\cercle}{ O{} O{} m }{%
+\NewDocumentCommand{\cercle}{ s O{} O{} m }{%
   \begingroup
-    \figsetdefault{#1}{30}{\figAngle}%
-    \figsetdefault{#2}{O,A}{\figLbls}%
-    \def\figR{#3}%
+    \figsetdefault{#2}{30}{\figAngle}%
+    \figsetdefault{#3}{O,A}{\figLbls}%
+    \def\figR{#4}%
 
     % Noms de points calculés une seule fois
     \edef\figPtO{\figlabelitem{\figLbls}{1}}%
@@ -460,12 +580,13 @@
     \tkzDefShiftPoint[\figPtO](\figAngle:\figR){\figPtA}
 
     \tkzDrawCircle(\figPtO,\figPtA)
-    \tkzDrawSegment(\figPtO,\figPtA)
     \tkzDrawPoint(\figPtO)
-    \tkzDrawPoint(\figPtA)
-
-    \tkzLabelPoint[below](\figPtO){\figPtO}
-    \tkzLabelPoint[above right](\figPtA){\figPtA}
+    \IfBooleanT{#1}{%
+      \tkzDrawSegment(\figPtO,\figPtA)
+      \tkzDrawPoint(\figPtA)
+      \tkzLabelPoint[above right](\figPtA){\figPtA}
+    }%
+    \tkzLabelPoint[below](\figPtO){\figPtO}%
   \endgroup
 }
 %==============================================================
