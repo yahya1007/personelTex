@@ -661,6 +661,61 @@
   \endgroup
 }%
 %============================================================
+% --------------------------------------------------------------
+% \parallelesSecante*[angle][labels]{distance}{demi-longueur}
+% angle          = angle de la sécante par rapport à l'horizontale (défaut 60°)
+% labels         = 6 noms : A,B (droite 1) C,D (droite 2) M,N (intersections)
+% distance       = écart vertical entre les deux parallèles
+% demi-longueur  = longueur de chaque côté du point d'intersection sur chaque droite
+% *              = fait apparaître le marquage des angles alternes-internes en M et N
+% --------------------------------------------------------------
+\NewDocumentCommand{\parallelesSecante}{ s O{} O{} m m }{%
+  \begingroup
+    \figsetdefault{#2}{60}{\figAngle}%
+    \figsetdefault{#3}{A,B,C,D,M,N}{\figLbls}%
+    \def\figH{#4}%
+    \def\figL{#5}%
+    \pgfmathsetmacro{\figDist}{\figH/sin(\figAngle)}%
 
+    % noms de points calculés une seule fois
+    \edef\figPtA{\figlabelitem{\figLbls}{1}}%
+    \edef\figPtB{\figlabelitem{\figLbls}{2}}%
+    \edef\figPtC{\figlabelitem{\figLbls}{3}}%
+    \edef\figPtD{\figlabelitem{\figLbls}{4}}%
+    \edef\figPtM{\figlabelitem{\figLbls}{5}}%
+    \edef\figPtN{\figlabelitem{\figLbls}{6}}%
+
+    % --- Points d'intersection sécante / parallèles ---
+    \tkzDefPoint(0,0){\figPtM}
+    \tkzDefShiftPoint[\figPtM](\figAngle:\figDist){\figPtN}
+
+    % --- Extrémités des deux parallèles ---
+    \tkzDefShiftPoint[\figPtM](180:\figL){\figPtA}
+    \tkzDefShiftPoint[\figPtM](0:\figL){\figPtB}
+    \tkzDefShiftPoint[\figPtN](180:\figL){\figPtC}
+    \tkzDefShiftPoint[\figPtN](0:\figL){\figPtD}
+
+    % --- Tracés ---
+    \tkzDrawLine[add=0.1 and 0.1](\figPtA,\figPtB)
+    \tkzDrawLine[add=0.1 and 0.1](\figPtC,\figPtD)
+    \tkzDrawLine[add=0.3 and 0.3](\figPtM,\figPtN)
+
+    \tkzDrawPoints(\figPtA,\figPtB,\figPtC,\figPtD,\figPtM,\figPtN)
+
+    \tkzLabelPoint[below](\figPtA){\figPtA}
+    \tkzLabelPoint[below](\figPtB){\figPtB}
+    \tkzLabelPoint[above](\figPtC){\figPtC}
+    \tkzLabelPoint[above](\figPtD){\figPtD}
+    \tkzLabelPoint[below right](\figPtM){\figPtM}
+    \tkzLabelPoint[above left](\figPtN){\figPtN}
+
+    % --- Marquage optionnel : angles alternes-internes ---
+    \IfBooleanT{#1}{%
+      \tkzMarkAngle[size=0.3,mark=|](\figPtB,\figPtM,\figPtN)
+      \tkzMarkAngle[size=0.3,mark=|](\figPtC,\figPtN,\figPtM)
+    }%
+  \endgroup
+}%
+%=============================================================
 
 \endinput
