@@ -1,20 +1,22 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{Dagrammes}
-[2024/03/11 v1.01 Extension permettant de faciliter l'affichage des diagrammes]
+\ProvidesPackage{Diagrammes}
+[2026/08/11 v2.01 Extension permettant de faciliter l'affichage des diagrammes]
 
 
 %-----------------------------------------------------
 \@ifpackageloaded{tkz-base}{}{\RequirePackage{tkz-base}}
 \@ifpackageloaded{tkz-euclide}{}{\RequirePackage[lua]{tkz-euclide}}
+\@ifpackageloaded{tikz}{}{\RequirePackage{tikz}}
+\@ifpackageloaded{xstring}{}{\RequirePackage{xstring}}
+\@ifpackageloaded{simplekv}{}{\RequirePackage{simplekv}}
+\@ifpackageloaded{listofitems}{}{\RequirePackage{listofitems}}
+\@ifpackageloaded{xintexpr}{}{\RequirePackage{xintexpr}}
+\@ifpackageloaded{siunitx}{}{\RequirePackage{siunitx}}
+\@ifpackageloaded{xfp}{}{\RequirePackage{xfp}}
 
-\RequirePackage{xstring}  % \IfEq, \IfStrEq, \IfSubStr, \StrCut
+\usetikzlibrary{calc, arrows.meta}
 
 \RequirePackage{pgf-pie}   % histogramme circulaire
-
-\RequirePackage{listofitems}
-
-\RequirePackage{xintexpr}     
-\RequirePackage{xint}     % calculs (histogramme)
 
 %-----------------------------------------------------
 
@@ -110,299 +112,423 @@
 %\Histogramme[Largeur=10,Hauteur=8,%
 %ListeCouleurs={orange,gray,blue,pink,red,black},%
 %DebutOx=5,FinOx=18,GradX={5,7,...,17},GradY={0,25,...,175},%
-%AffEffectifs=false,LabelX={l'age},LabelY={taille en (cm)}]%
+%AffEffectifs=false,LabelX={l'age},LabelY={taille en (cm)},%
+%EspaceBarres=0.15,Titre={Répartition des tailles}]%
 %{5/7/25 7/9/130 9/11/175 11/13/182 13/15/95 15/17/75}
 %----------------Fin example ------------------------
+%---------------------------------------------------------------------------
+%  Palette automatique
+%---------------------------------------------------------------------------
+\def\HistoAutoColors{%
+    red,blue,green!70!black,orange,purple,cyan,brown,magenta,teal,lime!70!black%
+}
 
+%---------------------------------------------------------------------------
+%  1.  CLÉS
+%---------------------------------------------------------------------------
 \defKV[histostats]{%
-	ListeCouleurs=\def\HistoCouleurs{#1},%
-	Largeur=\def\HistoLargeur{#1},%
-	Hauteur=\def\HistoHauteur{#1},%
-	GradX=\def\HistoGradX{#1},%
-	GradY=\def\HistoGradY{#1},%
-	PosEffectifs=\def\HistoPosEff{#1},%
-	LabelX=\def\HistoLabelx{#1},%
-	LabelY=\def\HistoLabely{#1},%
-	ElargirX=\def\HistoElargirx{#1},%
-	ElargirY=\def\HistoElargiry{#1},%
-	PoliceAxes=\def\HistoFonte{#1},%
-	PoliceEffectifs=\def\HistoFonteEff{#1},%
-	Opacite=\def\HistoOpac{#1},%
-	DebutOx=\def\HistoDebX{#1},%
-	FinOx=\def\HistoFinX{#1},%
-	EpaisseurTraits=\def\HistoEptraits{#1},%
-	Grille=\def\HistoGrille{#1},%
-	ExtraGrilleY=\def\HistoExtraGridY{#1},%
-	PosLegende=\def\HistoPosLeg{#1},%
-	OrigineX=\def\axexOx{#1}%
+    ListeCouleurs    = \def\HistoCouleurs{#1},%
+    Largeur          = \def\HistoLargeur{#1},%
+    Hauteur          = \def\HistoHauteur{#1},%
+    GradX            = \def\HistoGradX{#1},%
+    GradY            = \def\HistoGradY{#1},%
+    PosEffectifs     = \def\HistoPosEff{#1},%
+    LabelX           = \def\HistoLabelx{#1},%
+    LabelY           = \def\HistoLabely{#1},%
+    ElargirX         = \def\HistoElargirx{#1},%
+    ElargirY         = \def\HistoElargiry{#1},%
+    PoliceAxes       = \def\HistoFonte{#1},%
+    PoliceEffectifs  = \def\HistoFonteEff{#1},%
+    Opacite          = \def\HistoOpac{#1},%
+    DebutOx          = \def\HistoDebX{#1},%
+    FinOx            = \def\HistoFinX{#1},%
+    EpaisseurTraits  = \def\HistoEptraits{#1},%
+    Grille           = \def\HistoGrille{#1},%
+    OrigineX         = \def\axexOx{#1},%
+    ArrondiY         = \def\HistoArrondiY{#1},%
+    AfficheAxes      = \def\HistoAffAxes{#1},%
+    EspaceBarres     = \def\HistoEspace{#1},%
+    Titre            = \def\HistoTitre{#1},%
+    PoliceTitre      = \def\HistoFonteTitre{#1}%
 }
 
 \setKVdefault[histostats]{%
-	ListeCouleurs=orange,%
-	Largeur=10,%
-	Hauteur=5,%
-	GradX={},%
-	GradY={},%
-	AffEffectifs=true,%
-	PosEffectifs=milieu,%
-	ElargirX=5mm,%
-	ElargirY=5mm,%
-	LabelX={},%
-	LabelY={},%
-	PoliceAxes=\normalsize\normalfont,%
-	PoliceEffectifs=\normalsize\normalfont,%
-	AffBornes=false,%
-	Remplir=true,%
-	Opacite=0.5,%
-	GrilleV=true,%
-	DebutOx={},%
-	FinOx={},%
-	EpaisseurTraits=semithick,%
-	Grille={},%
-	ExtraGrilleY=0,%
-	PosLegende={},%
-	OrigineX=0%
+    ListeCouleurs    = auto,%
+    Largeur          = 10,%
+    Hauteur          = 5,%
+    GradX            = {},%
+    GradY            = {},%
+    AffEffectifs     = true,%
+    PosEffectifs     = milieu,%
+    ElargirX         = 5mm,%
+    ElargirY         = 5mm,%
+    LabelX           = {},%
+    LabelY           = {},%
+    PoliceAxes       = \normalsize\normalfont,%
+    PoliceEffectifs  = \normalsize\normalfont,%
+    AffBornes        = false,%
+    Remplir          = true,%
+    Opacite          = 0.5,%
+    GrilleV          = true,%
+    DebutOx          = {},%
+    FinOx            = {},%
+    EpaisseurTraits  = semithick,%
+    Grille           = {},%
+    OrigineX         = 0,%
+    ArrondiY         = 3,%
+    AfficheAxes      = true,%
+    EspaceBarres     = 0,%
+    Titre            = {},%
+    PoliceTitre      = \large\bfseries%
 }
 
-\NewDocumentCommand\Histogramme{ s O{} m }{%
-	\useKVdefault[histostats]%
-	\setKV[histostats]{#2}%
-	\setsepchar[.]{ ./}%
-	\readlist*\LISTDONNEES{#3}%
-	\IfEq{\HistoDebX}{}%on stocke le début de l'axe Ox si besoin
-		{\itemtomacro\LISTDONNEES[1,1]{\HistoDebX}}{}%
-	\IfEq{\HistoFinX}{}%on stocke la fin de l'axe Ox si besoin
-		{\itemtomacro\LISTDONNEES[-1,2]{\HistoFinX}}{}%
-	\setsepchar{,}%
-	\readlist*\LISTCOUL{\HistoCouleurs}%
-	%distinction suivant largeur classes
-	\IfBooleanTF{#1}%étoilé := classe d'amplitudes différentes
-		{%
-			
-			\xdef\ListeHauteurs{\xintfloateval{(\LISTDONNEES[1,3])/(\LISTDONNEES[1,2]-\LISTDONNEES[1,1])}}
-			\foreach \i in {2,...,\LISTDONNEESlen}
-				{%
-					\xdef\ListeHauteurs{\ListeHauteurs,\xintfloateval{(\LISTDONNEES[\i,3])/(\LISTDONNEES[\i,2]-\LISTDONNEES[\i,1])}}%
-				}%
-			\IfEq{\HistoGrille}{}%on lit les infos de la grille PasX/UniteAire
-				{}%
-				{%
-					\StrCut{\HistoGrille}{/}{\HistoPasX}{\HistoUnAire}%
-					\def\HistoPasY{\xintfloateval{\HistoUnAire/\HistoPasX}}%
-				}%
-			\xdef\maxhauteurs{\xintfloateval{round(max(\ListeHauteurs),3)}}%
-			
-			\IfEq{\HistoGrille}{}%
-				{%
-					\xdef\HistoUniteY{\xintfloateval{round(\HistoHauteur/max(\ListeHauteurs),3)}}%
-				}%
-				{%
-					\xdef\maxhauteurgrille{\xinteval{(floor((\maxhauteurs)/(\HistoPasY))+1+\HistoExtraGridY)*\HistoPasY}}%
-					\xdef\HistoUniteY{\xintfloateval{round((\HistoHauteur)/(\maxhauteurgrille),3)}}%
-				}%
-			\xdef\HistoUniteX{\xintfloateval{round(\HistoLargeur/(\HistoFinX-\HistoDebX),3)}}%
-			%fenêtre graphique
-			\begin{tikzpicture}[x=\HistoUniteX cm,y=\HistoUniteY cm]
-				%Essai de grille
-				\IfEq{\HistoGrille}{}%
-					{}%
-					{%
-						\draw[line width=0.4pt,lightgray,xstep=\HistoPasX,ystep=\HistoPasY] ({\HistoDebX},0) grid ({\HistoFinX},{\xinteval{floor((\maxhauteurs)/(\HistoPasY))+1+\HistoExtraGridY}*\HistoPasY}) ;
-						\IfSubStr{\HistoPosLeg}{/}%
-							{%
-								\StrCut{\HistoPosLeg}{/}{\HistoPosLegX}{\HistoPosLegY}%
-								\draw[\HistoEptraits,fill=lightgray,fill opacity=\HistoOpac] ({\HistoDebX+(\HistoPosLegX)*(\HistoPasX)},{(\HistoPasY)*(\HistoPosLegY)}) rectangle++ ({\HistoPasX},{\HistoPasY}) ; %
-								\draw ({\HistoDebX+(\HistoPosLegX+1)*(\HistoPasX)},{(\HistoPasY)*(\HistoPosLegY+0.5)}) node[right,font=\HistoFonteEff] {\num{\HistoUnAire}} ;%
-							}%
-							{}%
-						%\draw ({\HistoDebX},{0}) node[below left] {\xinteval{floor((\maxhauteurs)/(\HistoPasY))+1}} ;
-						%\draw ({\HistoDebX},{\HistoPasY}) node[left] {\num{\HistoPasY}} ;
-						%\draw ({\HistoDebX},{\maxhauteurs}) node[left] {\num{\maxhauteurs}} ;
-						
-					}%
-				%rectangles
-				\foreach \i in {1,...,\LISTDONNEESlen}
-					{%
-						\xintifboolexpr{\LISTCOULlen == 1}%
-							{\def\couleurhisto{\HistoCouleurs}}%
-							{\itemtomacro\LISTCOUL[\i]{\couleurhisto}}%
-						\ifboolKV[histostats]{AffBornes}%
-							{%
-								\draw[\HistoEptraits] ({\LISTDONNEES[\i,1]},3pt)--++(0,-6pt) node[below,font=\HistoFonte] {\LISTDONNEES[\i,1]} ;
-								\draw[\HistoEptraits] ({\LISTDONNEES[\i,2]},3pt)--++(0,-6pt) node[below,font=\HistoFonte] {\LISTDONNEES[\i,2]} ;
-							}%
-							{}%
-						\ifboolKV[histostats]{Remplir}%
-							{%
-								\draw[\HistoEptraits,fill=\couleurhisto,fill opacity=\HistoOpac] ({\LISTDONNEES[\i,1]},0) rectangle ({\LISTDONNEES[\i,2]},{(\LISTDONNEES[\i,3])/(\LISTDONNEES[\i,2]-\LISTDONNEES[\i,1])}) ;
-							}%
-							{%
-								\draw[\HistoEptraits] ({\LISTDONNEES[\i,1]},0) rectangle ({\LISTDONNEES[\i,2]},{(\LISTDONNEES[\i,3])/(\LISTDONNEES[\i,2]-\LISTDONNEES[\i,1])}) ;
-							}%
-					}%
-				\foreach \x in \HistoGradX
-					{%
-						\draw[\HistoEptraits] (\x,3pt)--++(0,-6pt) node[below,font=\HistoFonte] {\num{\x}} ;
-					}%
-				\ifboolKV[histostats]{AffEffectifs}
-					{%
-						\IfStrEq{\HistoPosEff}{milieu}%
-							{%
-								\foreach \i in {1,...,\LISTDONNEESlen}
-									\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]},{0.5*(\LISTDONNEES[\i,3])/(\LISTDONNEES[\i,2]-\LISTDONNEES[\i,1])}) node[font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-							}%
-							{}%
-						\IfStrEq{\HistoPosEff}{bas}%
-							{%
-								\foreach \i in {1,...,\LISTDONNEESlen}
-									\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]},{0}) node[above,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-							}%
-							{}%
-						\IfStrEq{\HistoPosEff}{haut}%
-							{%
-								\foreach \i in {1,...,\LISTDONNEESlen}
-									\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]},{(\LISTDONNEES[\i,3])/(\LISTDONNEES[\i,2]-\LISTDONNEES[\i,1])}) node[below,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-							}%
-							{}%
-						\IfStrEq{\HistoPosEff}{dessus}%
-							{%
-								\foreach \i in {1,...,\LISTDONNEESlen}
-									\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]},{(\LISTDONNEES[\i,3])/(\LISTDONNEES[\i,2]-\LISTDONNEES[\i,1])}) node[above,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-							}%
-							{}%
-					}%
-					{}%
-				\draw[\HistoEptraits,->,>=latex] ({\HistoDebX},0) -- ({\HistoFinX},0) --++ ({\HistoElargirx},0) node[right,font=\HistoFonte] {\HistoLabelx} ;
-			\end{tikzpicture}%
-		}%
-		{%
-			\xdef\ListeHauteurs{\LISTDONNEES[1,3]}
-			\foreach \i in {2,...,\LISTDONNEESlen}
-				{%
-					\xdef\ListeHauteurs{\ListeHauteurs,\LISTDONNEES[\i,3]}%
-				}%
-			\xdef\maxhauteurs{\xinteval{round(max(\ListeHauteurs),3)}}%
-			\xdef\HistoUniteY{\xinteval{round(\HistoHauteur/max(\ListeHauteurs),3)}}%
-			\xdef\HistoUniteX{\xinteval{round(\HistoLargeur/(\HistoFinX-\HistoDebX),3)}}%
-			%fenêtre graphique
-			\begin{tikzpicture}[x=\HistoUniteX cm,y=\HistoUniteY cm]
-				\ifboolKV[histostats]{GrilleV}%
-					{%
-						\foreach \y in \HistoGradY
-						{%
-							\draw[line width=0.4pt,lightgray] ({\HistoDebX},\y) -- ({\HistoFinX},\y) --++ ({\HistoElargirx},0) ;
-						}%
-					}%
-					{}%
-				\foreach \i in {1,...,\LISTDONNEESlen}
-					{%
-						\xintifboolexpr{\LISTCOULlen == 1}%
-							{\def\couleurhisto{\HistoCouleurs}}%
-							{\itemtomacro\LISTCOUL[\i]{\couleurhisto}}%
-						\ifboolKV[histostats]{AffBornes}%
-							{%
-								\draw[\HistoEptraits] ({\LISTDONNEES[\i,1]},3pt)--++(0,-6pt) node[below,font=\HistoFonte] {\LISTDONNEES[\i,1]} ;
-								\draw[\HistoEptraits] ({\LISTDONNEES[\i,2]},3pt)--++(0,-6pt) node[below,font=\HistoFonte] {\LISTDONNEES[\i,2]} ;
-							}%
-							{}%
-						\ifboolKV[histostats]{Remplir}%
-						{%
-							\draw[\HistoEptraits,fill=\couleurhisto,fill opacity=\HistoOpac] ({\LISTDONNEES[\i,1]},0) rectangle ({\LISTDONNEES[\i,2]},{\LISTDONNEES[\i,3]}) ;
-						}%
-						{%
-							\draw[\HistoEptraits] ({\LISTDONNEES[\i,1]},0) rectangle ({\LISTDONNEES[\i,2]},{\LISTDONNEES[\i,3]}) ;
-						}%
-					}%
-				\foreach \x in \HistoGradX
-					{%
-						\draw[\HistoEptraits] (\x,3pt)--++(0,-6pt) node[below,font=\HistoFonte] {\num{\x}} ;
-					}%
-				\foreach \y in \HistoGradY
-					{%
-						\draw[\HistoEptraits] ($({\HistoDebX},\y)+(3pt,0)$) --++ (-6pt,0) node[left,font=\HistoFonte] {\num{\y}} ;
-					}%
-				\ifboolKV[histostats]{AffEffectifs}
-					{%
-						\IfStrEq{\HistoPosEff}{milieu}%
-							{%
-								\foreach \i in {1,...,\LISTDONNEESlen}
-									\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]},{0.5*\LISTDONNEES[\i,3]}) node[font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-							}%
-							{}%
-						\IfStrEq{\HistoPosEff}{bas}%
-							{%
-								\foreach \i in {1,...,\LISTDONNEESlen}
-									\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]},{0}) node[above,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-							}%
-							{}%
-						\IfStrEq{\HistoPosEff}{haut}%
-							{%
-								\foreach \i in {1,...,\LISTDONNEESlen}
-									\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]},{\LISTDONNEES[\i,3]}) node[below,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-							}%
-							{}%
-						\IfStrEq{\HistoPosEff}{dessus}%
-							{%
-								\foreach \i in {1,...,\LISTDONNEESlen}
-									\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]},{\LISTDONNEES[\i,3]}) node[above,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-							}%
-							{}%
-					}%
-					{}%
-			\draw[\HistoEptraits,->,>=latex] ({\HistoDebX},0) -- ({\HistoFinX},0) --++ ({\HistoElargirx},0) node[right,font=\HistoFonte] {\HistoLabelx} ;
-			\draw[\HistoEptraits,->,>=latex] ({\HistoDebX},0) -- ({\HistoDebX},{\maxhauteurs}) --++ (0,{\HistoElargiry}) node[above,font=\HistoFonte] {\HistoLabely} ;
-		\end{tikzpicture}%
-		}%
+%---------------------------------------------------------------------------
+%  2.  PAS "PROPRE" (1, 2, 5, 10, 20, 25, 50, 100...)
+%---------------------------------------------------------------------------
+\newcommand{\Histo@NiceStep}[1]{%
+    \pgfmathsetmacro{\Histo@pow}{floor(log10(#1))}%
+    \pgfmathsetmacro{\Histo@base}{10^\Histo@pow}%
+    \pgfmathsetmacro{\Histo@ratio}{#1/\Histo@base}%
+    \pgfmathsetmacro{\Histo@step}{%
+        \Histo@ratio < 1.4 ? \Histo@base : (%
+        \Histo@ratio < 3.5 ? 2*\Histo@base : (%
+        \Histo@ratio < 7.5 ? 5*\Histo@base : 10*\Histo@base))%
+    }%
 }
 
-\NewDocumentCommand\HistogrammeTikz{ O{} m }{%
-	\useKVdefault[histostats]%
-	\setKV[histostats]{#1}%
-	\setsepchar[.]{ ./}%
-	\readlist*\LISTDONNEES{#2}%
-	\setsepchar{,}%
-	\readlist*\LISTCOUL{\HistoCouleurs}%
-	\foreach \i in {1,...,\LISTDONNEESlen}
-		{%
-			\xintifboolexpr{\LISTCOULlen == 1}%
-				{\def\couleurhisto{\HistoCouleurs}}%
-				{\itemtomacro\LISTCOUL[\i]{\couleurhisto}}%
-		\ifboolKV[histostats]{Remplir}%
-			{%
-				\draw[line width=1pt,fill=\couleurhisto,fill opacity=\HistoOpac] ({\LISTDONNEES[\i,1]-\axexOx},0) rectangle ({\LISTDONNEES[\i,2]-\axexOx},{\LISTDONNEES[\i,3]}) ;
-			}%
-			{%
-				\draw[line width=1pt] ({\LISTDONNEES[\i,1]-\axexOx},0) rectangle ({\LISTDONNEES[\i,2]-\axexOx},{\LISTDONNEES[\i,3]}) ;
-			}%
-		}%
-	\ifboolKV[histostats]{AffEffectifs}
-		{%
-			\IfStrEq{\HistoPosEff}{milieu}%
-				{%
-					\foreach \i in {1,...,\LISTDONNEESlen}
-						\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]-\axexOx},{0.5*\LISTDONNEES[\i,3]}) node[font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-				}%
-				{}%
-			\IfStrEq{\HistoPosEff}{bas}%
-				{%
-					\foreach \i in {1,...,\LISTDONNEESlen}
-						\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]-\axexOx},{0}) node[above,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-				}%
-				{}%
-			\IfStrEq{\HistoPosEff}{haut}%
-				{%
-					\foreach \i in {1,...,\LISTDONNEESlen}
-						\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]-\axexOx},{\LISTDONNEES[\i,3]}) node[below,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-				}%
-				{}%
-			\IfStrEq{\HistoPosEff}{dessus}%
-				{%
-					\foreach \i in {1,...,\LISTDONNEESlen}
-						\draw ({0.5*\LISTDONNEES[\i,1]+0.5*\LISTDONNEES[\i,2]-\axexOx},{\LISTDONNEES[\i,3]}) node[above,font=\HistoFonteEff] {\num{\LISTDONNEES[\i,3]}} ;
-				}%
-				{}%
-		}%
-		{}%
+%---------------------------------------------------------------------------
+%  3.  COULEURS AUTOMATIQUES (cycle sur la liste chargée dans \LISTCOUL,
+%      qu'il s'agisse de la palette auto ou d'une liste fournie par
+%      l'utilisateur : plus besoin de dupliquer 10 couleurs "en dur")
+%---------------------------------------------------------------------------
+\newcommand{\Histo@SetColor}[1]{%
+    \pgfmathtruncatemacro{\Histo@idx}{mod(#1-1,\LISTCOULlen)+1}%
+    \itemtomacro\LISTCOUL[\Histo@idx]{\couleurhisto}%
 }
+
+%---------------------------------------------------------------------------
+%  4.  MACROS INTERNES DESSIN
+%---------------------------------------------------------------------------
+% #1 = indice de la barre, #2 = décalage en abscisse (0 pour \Histogramme,
+% origine des x pour \HistogrammeTikz/\HistogrammeDensite).
+% \HistoEspace (0 à 1) : fraction de la largeur de chaque barre retirée
+% comme espace, répartie de part et d'autre (0 = barres jointives, comme
+% avant ; 0.2 = 20% de la largeur transformée en espace blanc).
+\newcommand{\Histo@DrawOneBar}[2]{%
+    \Histo@SetColor{#1}%
+    \pgfmathsetmacro{\Histo@larg}{\LISTDONNEES[#1,2]-\LISTDONNEES[#1,1]}%
+    \pgfmathsetmacro{\Histo@gap}{\Histo@larg*(\HistoEspace)/2}%
+    \ifboolKV[histostats]{Remplir}%
+        {%
+            \draw[\HistoEptraits, fill=\couleurhisto, fill opacity=\HistoOpac] 
+                ({\LISTDONNEES[#1,1]+\Histo@gap-#2},0) rectangle 
+                ({\LISTDONNEES[#1,2]-\Histo@gap-#2},{\LISTDONNEES[#1,3]}) ;%
+        }%
+        {%
+            \draw[\HistoEptraits] 
+                ({\LISTDONNEES[#1,1]+\Histo@gap-#2},0) rectangle 
+                ({\LISTDONNEES[#1,2]-\Histo@gap-#2},{\LISTDONNEES[#1,3]}) ;%
+        }%
+}
+
+% Positionnement de l'effectif : "milieu" (dans la barre), "bas" (au pied,
+% au-dessus de l'axe), "haut" (juste sous le sommet, à l'intérieur),
+% et par défaut ("dessus" ou toute valeur non reconnue) au-dessus de la
+% barre. La chaîne de \IfStrEq imbriqués court-circuite dès la première
+% correspondance au lieu de refaire les 4 tests systématiquement.
+\newcommand{\Histo@DrawOneLabel}[2]{%
+    \def\Histo@milieuX{{0.5*\LISTDONNEES[#1,1]+0.5*\LISTDONNEES[#1,2]-#2}}%
+    \IfStrEq{\HistoPosEff}{milieu}%
+        {\draw (\Histo@milieuX,{0.5*\LISTDONNEES[#1,3]}) 
+            node[font=\HistoFonteEff] {\num{\LISTDONNEES[#1,3]}} ;}%
+        {\IfStrEq{\HistoPosEff}{bas}%
+            {\draw (\Histo@milieuX,{0}) 
+                node[above,font=\HistoFonteEff] {\num{\LISTDONNEES[#1,3]}} ;}%
+            {\IfStrEq{\HistoPosEff}{haut}%
+                {\draw (\Histo@milieuX,{\LISTDONNEES[#1,3]}) 
+                    node[below,font=\HistoFonteEff] {\num{\LISTDONNEES[#1,3]}} ;}%
+                {\draw (\Histo@milieuX,{\LISTDONNEES[#1,3]}) 
+                    node[above,font=\HistoFonteEff] {\num{\LISTDONNEES[#1,3]}} ;}%
+            }%
+        }%
+}
+
+%---------------------------------------------------------------------------
+%  5.  \Histogramme
+%---------------------------------------------------------------------------
+\NewDocumentCommand\Histogramme{O{} m}{%
+    \useKVdefault[histostats]%
+    \setKV[histostats]{#1}%
+    %
+    % --- Parsing ---
+    \setsepchar[.]{ ./}%
+    \readlist*\LISTDONNEES{#2}%
+    %
+    % --- Hauteurs (brut + arrondi) ---
+    \xdef\ListeHauteurs{\LISTDONNEES[1,3]}%
+    \foreach \i in {2,...,\LISTDONNEESlen}{%
+        \xdef\ListeHauteurs{\ListeHauteurs,\LISTDONNEES[\i,3]}%
+    }%
+    \xdef\maxhauteursbrut{\fpeval{max(\ListeHauteurs)}}%
+    \xdef\maxhauteurs{\fpeval{round(\maxhauteursbrut,\HistoArrondiY)}}%
+    %
+    % --- Bornes Min/Max ---
+    \itemtomacro\LISTDONNEES[1,1]{\Histo@xmin}%
+    \itemtomacro\LISTDONNEES[-1,2]{\Histo@xmax}%
+    %
+    \IfStrEq{\HistoDebX}{}%
+        {\let\HistoDebX\Histo@xmin}%
+        {\IfStrEq{\HistoDebX}{Min}{\let\HistoDebX\Histo@xmin}{}}%
+    \IfStrEq{\HistoFinX}{}%
+        {\let\HistoFinX\Histo@xmax}%
+        {\IfStrEq{\HistoFinX}{Max}{\let\HistoFinX\Histo@xmax}{}}%
+    %
+    % --- Garde-fou : bornes cohérentes ---
+    \ifdim\HistoFinX pt<\HistoDebX pt
+        \PackageError{Dagrammes}{FinOx (\HistoFinX) est inférieur à DebutOx (\HistoDebX)}%
+            {Vérifiez les clés DebutOx et FinOx de \string\Histogramme.}%
+    \fi
+    %
+    % --- Substitution Min/Max ---
+    \StrSubstitute{\HistoGradX}{Min}{\HistoDebX}[\HistoGradX]%
+    \StrSubstitute{\HistoGradX}{Max}{\HistoFinX}[\HistoGradX]%
+    \StrSubstitute{\HistoGradY}{Min}{0}[\HistoGradY]%
+    \StrSubstitute{\HistoGradY}{Max}{\maxhauteurs}[\HistoGradY]%
+    %
+    % --- GradY AUTO si vide ---
+    \IfEq{\HistoGradY}{}{%
+        \pgfmathsetmacro{\Histo@rawstep}{\maxhauteursbrut/5}%
+        \Histo@NiceStep{\Histo@rawstep}%
+        \xdef\HistoGradY{0}%
+        \foreach \i in {1,...,40} {%
+            \pgfmathsetmacro{\Histo@y}{\i*\Histo@step}%
+            \ifdim\Histo@y pt > \maxhauteursbrut pt
+                \breakforeach
+            \else
+                \xdef\HistoGradY{\HistoGradY,\Histo@y}%
+            \fi
+        }%
+    }{}%
+    %
+    % --- GradX AUTO si vide ---
+    \IfEq{\HistoGradX}{}{%
+        \pgfmathsetmacro{\Histo@rawstep}{(\HistoFinX-\HistoDebX)/5}%
+        \Histo@NiceStep{\Histo@rawstep}%
+        \xdef\HistoGradX{\HistoDebX}%
+        \foreach \i in {1,...,40} {%
+            \pgfmathsetmacro{\Histo@x}{\HistoDebX + \i*\Histo@step}%
+            \ifdim\Histo@x pt > \HistoFinX pt
+                \breakforeach
+            \else
+                \xdef\HistoGradX{\HistoGradX,\Histo@x}%
+            \fi
+        }%
+    }{}%
+    %
+    % --- Couleurs ---
+    \setsepchar{,}%
+    \readlist*\LISTCOUL{\HistoCouleurs}%
+    \IfStrEq{\HistoCouleurs}{auto}%
+        {\readlist*\LISTCOUL{\HistoAutoColors}}%
+        {}%
+   
+   \def\Histo@YTop{\maxhauteurs}%
+\foreach \Histo@ycand in \HistoGradY{%
+    \pgfmathsetmacro{\Histo@yval}{\Histo@ycand}%
+    \ifdim\Histo@yval pt > \Histo@YTop pt
+        \xdef\Histo@YTop{\Histo@yval}%
+    \fi
+}%
+    %
+    % --- Échelles (on réutilise \maxhauteursbrut déjà calculé plus haut,
+    % au lieu de refaire un appel à max() sur toute la liste) ---
+    \xdef\HistoUniteY{\fpeval{round(\HistoHauteur/\maxhauteursbrut,5)}}%
+    \xdef\HistoUniteX{\fpeval{round(\HistoLargeur/(\HistoFinX-\HistoDebX),5)}}%
+    %
+    % --- Dessin ---
+    \begin{tikzpicture}[x=\HistoUniteX cm, y=\HistoUniteY cm]
+        \ifboolKV[histostats]{GrilleV}{%
+            \foreach \y in \HistoGradY{%
+                \draw[line width=0.4pt, lightgray] 
+                    ({\HistoDebX},\y) -- ({\HistoFinX},\y) ;%
+            }%
+        }{}%
+        %
+        \foreach \i in {1,...,\LISTDONNEESlen}{%
+            \ifboolKV[histostats]{AffBornes}{%
+                \draw[\HistoEptraits] ({\LISTDONNEES[\i,1]},3pt) -- ++(0,-6pt) 
+                    node[below, font=\HistoFonte] {\num{\LISTDONNEES[\i,1]}} ;%
+                \draw[\HistoEptraits] ({\LISTDONNEES[\i,2]},3pt) -- ++(0,-6pt) 
+                    node[below, font=\HistoFonte] {\num{\LISTDONNEES[\i,2]}} ;%
+            }{}%
+            \Histo@DrawOneBar{\i}{0}%
+        }%
+        %
+        \foreach \x in \HistoGradX{%
+            \draw[\HistoEptraits] (\x,3pt) -- ++(0,-6pt) 
+                node[below, font=\HistoFonte] {\num{\x}} ;%
+        }%
+        \foreach \y in \HistoGradY{%
+            \draw[\HistoEptraits] ($({\HistoDebX},\y)+(3pt,0)$) -- ++(-6pt,0) 
+                node[left, font=\HistoFonte] {\num{\y}} ;%
+        }%
+        %
+        \ifboolKV[histostats]{AffEffectifs}{%
+            \foreach \i in {1,...,\LISTDONNEESlen}{%
+                \Histo@DrawOneLabel{\i}{0}%
+            }%
+        }{}%
+        %
+        \ifboolKV[histostats]{AfficheAxes}{%
+            \draw[\HistoEptraits, ->, >=Stealth] 
+                ({\HistoDebX},0) -- ({\HistoFinX},0) -- ++({\HistoElargirx},0) 
+                node[right, font=\HistoFonte] {\HistoLabelx} ;%
+            \draw[\HistoEptraits, ->, >=Stealth] 
+                ({\HistoDebX},0) -- ({\HistoDebX},{\Histo@YTop}) -- ++(0,{\HistoElargiry}) 
+                node[above, font=\HistoFonte] {\HistoLabely} ;%
+        }{%
+            \draw[\HistoEptraits] ({\HistoDebX},0) -- ({\HistoFinX},0) ;%
+        }%
+        %
+        % --- Titre (optionnel, clé Titre={...}) ---
+        \IfStrEq{\HistoTitre}{}{}{%
+            \draw ({0.5*\HistoDebX+0.5*\HistoFinX},{\Histo@YTop}) 
+                node[above=18pt, font=\HistoFonteTitre] {\HistoTitre} ;%
+        }%
+    \end{tikzpicture}%
+}
+
+%---------------------------------------------------------------------------
+%  6.  \HistogrammeTikz
+%---------------------------------------------------------------------------
+\NewDocumentCommand\HistogrammeTikz{O{} m}{%
+    \useKVdefault[histostats]%
+    \setKV[histostats]{#1}%
+    %
+    \setsepchar[.]{ ./}%
+    \readlist*\LISTDONNEES{#2}%
+    %
+    \IfStrEq{\axexOx}{Min}{\itemtomacro\LISTDONNEES[1,1]{\axexOx}}{}%
+    %
+    \setsepchar{,}%
+    \readlist*\LISTCOUL{\HistoCouleurs}%
+    \IfStrEq{\HistoCouleurs}{auto}%
+        {\readlist*\LISTCOUL{\HistoAutoColors}}%
+        {}%
+    %
+    \foreach \i in {1,...,\LISTDONNEESlen}{%
+        \Histo@DrawOneBar{\i}{\axexOx}%
+    }%
+    %
+    \ifboolKV[histostats]{AffEffectifs}{%
+        \foreach \i in {1,...,\LISTDONNEESlen}{%
+            \Histo@DrawOneLabel{\i}{\axexOx}%
+        }%
+    }{}%
+}
+
+%---------------------------------------------------------------------------
+%  7.  \HistogrammeDensite
+%---------------------------------------------------------------------------
+\NewDocumentCommand\HistogrammeDensite{O{} m}{%
+    \useKVdefault[histostats]%
+    \setKV[histostats]{#1}%
+    %
+    \setsepchar[.]{ ./}%
+    \readlist*\LISTDONNEES{#2}%
+    %
+    \xdef\ListeDensites{\fpeval{\LISTDONNEES[1,3]/(\LISTDONNEES[1,2]-\LISTDONNEES[1,1])}}%
+    \foreach \i in {2,...,\LISTDONNEESlen}{%
+        \xdef\ListeDensites{%
+            \ListeDensites,\fpeval{\LISTDONNEES[\i,3]/(\LISTDONNEES[\i,2]-\LISTDONNEES[\i,1])}%
+        }%
+    }%
+    \xdef\maxdensitebrut{\fpeval{max(\ListeDensites)}}%
+    \xdef\maxdensite{\fpeval{round(\maxdensitebrut,\HistoArrondiY)}}%
+    %
+    \itemtomacro\LISTDONNEES[1,1]{\Histo@xmin}%
+    \itemtomacro\LISTDONNEES[-1,2]{\Histo@xmax}%
+    %
+    \IfStrEq{\HistoDebX}{}%
+        {\let\HistoDebX\Histo@xmin}%
+        {\IfStrEq{\HistoDebX}{Min}{\let\HistoDebX\Histo@xmin}{}}%
+    \IfStrEq{\HistoFinX}{}%
+        {\let\HistoFinX\Histo@xmax}%
+        {\IfStrEq{\HistoFinX}{Max}{\let\HistoFinX\Histo@xmax}{}}%
+    %
+    \StrSubstitute{\HistoGradX}{Min}{\HistoDebX}[\HistoGradX]%
+    \StrSubstitute{\HistoGradX}{Max}{\HistoFinX}[\HistoGradX]%
+    \StrSubstitute{\HistoGradY}{Min}{0}[\HistoGradY]%
+    \StrSubstitute{\HistoGradY}{Max}{\maxdensite}[\HistoGradY]%
+    %
+    \IfEq{\HistoGradY}{}{%
+        \pgfmathsetmacro{\Histo@rawstep}{\maxdensitebrut/5}%
+        \Histo@NiceStep{\Histo@rawstep}%
+        \xdef\HistoGradY{0}%
+        \foreach \i in {1,...,40} {%
+            \pgfmathsetmacro{\Histo@y}{\i*\Histo@step}%
+            \ifdim\Histo@y pt > \maxdensitebrut pt
+                \breakforeach
+            \else
+                \xdef\HistoGradY{\HistoGradY,\Histo@y}%
+            \fi
+        }%
+    }{}%
+    %
+    \IfEq{\HistoGradX}{}{%
+        \pgfmathsetmacro{\Histo@rawstep}{(\HistoFinX-\HistoDebX)/5}%
+        \Histo@NiceStep{\Histo@rawstep}%
+        \xdef\HistoGradX{\HistoDebX}%
+        \foreach \i in {1,...,40} {%
+            \pgfmathsetmacro{\Histo@x}{\HistoDebX + \i*\Histo@step}%
+            \ifdim\Histo@x pt > \HistoFinX pt
+                \breakforeach
+            \else
+                \xdef\HistoGradX{\HistoGradX,\Histo@x}%
+            \fi
+        }%
+    }{}%
+    %
+    \setsepchar{,}%
+    \readlist*\LISTCOUL{\HistoCouleurs}%
+    \IfStrEq{\HistoCouleurs}{auto}%
+        {\readlist*\LISTCOUL{\HistoAutoColors}}%
+        {}%
+    %
+    \xdef\HistoUniteY{\fpeval{round(\HistoHauteur/\maxdensitebrut,5)}}%
+    \xdef\HistoUniteX{\fpeval{round(\HistoLargeur/(\HistoFinX-\HistoDebX),5)}}%
+    %
+    \begin{tikzpicture}[x=\HistoUniteX cm, y=\HistoUniteY cm]
+        \foreach \i in {1,...,\LISTDONNEESlen}{%
+            \pgfmathsetmacro{\Histo@hauteur}{%
+                \LISTDONNEES[\i,3]/(\LISTDONNEES[\i,2]-\LISTDONNEES[\i,1])%
+            }%
+            \Histo@SetColor{\i}%
+            \ifboolKV[histostats]{Remplir}{%
+                \draw[\HistoEptraits, fill=\couleurhisto, fill opacity=\HistoOpac] 
+                    ({\LISTDONNEES[\i,1]},0) rectangle ({\LISTDONNEES[\i,2]},\Histo@hauteur) ;%
+            }{%
+                \draw[\HistoEptraits] 
+                    ({\LISTDONNEES[\i,1]},0) rectangle ({\LISTDONNEES[\i,2]},\Histo@hauteur) ;%
+            }%
+        }%
+        %
+        \foreach \x in \HistoGradX{%
+            \draw[\HistoEptraits] (\x,3pt) -- ++(0,-6pt) 
+                node[below, font=\HistoFonte] {\num{\x}} ;%
+        }%
+        \foreach \y in \HistoGradY{%
+            \draw[\HistoEptraits] ($({\HistoDebX},\y)+(3pt,0)$) -- ++(-6pt,0) 
+                node[left, font=\HistoFonte] {\num{\y}} ;%
+        }%
+        %
+        \draw[\HistoEptraits, ->, >=Stealth] 
+            ({\HistoDebX},0) -- ({\HistoFinX},0) -- ++({\HistoElargirx},0) 
+            node[right, font=\HistoFonte] {\HistoLabelx} ;%
+        \draw[\HistoEptraits, ->, >=Stealth] 
+            ({\HistoDebX},0) -- ({\HistoDebX},{\maxdensite}) -- ++(0,{\HistoElargiry}) 
+            node[above, font=\HistoFonte] {\HistoLabely} ;%
+    \end{tikzpicture}%
+}%
 %=================== Fin Histogramme =============== 
 \endinput

@@ -1,0 +1,227 @@
+\NeedsTeXFormat{LaTeX2e}%
+\ProvidesPackage{ProfModelsStyles}[2026/08/24 Styles graphiques des exercices et maquettes pour ProfModels]%
+
+% NOTE : tikzds est défini dans ProfModels.sty (style officiel DS).
+% Les styles ci-dessous sont des styles génériques indépendants.
+
+%######################################################################
+% PARTIE 2 : BIBLIOTHEQUE DE STYLES GENERIQUES
+% Ces styles (style1 a style9) sont independants de ProfModels et
+% peuvent etre appliques a n'importe quelle tcolorbox.
+%######################################################################
+
+%----------------------------------------------------------
+%%    		 style1 	 %%%%%%%%%%%%%%%%%%
+\tcbset{style1/.style={%
+        sharp corners,
+        rounded corners=northwest,
+        frame hidden,
+        attach boxed title to top left,
+        boxed title size=standard,
+         boxed title style={%
+                empty,
+                rounded corners=north, 
+                boxrule=0pt,
+                bottom=0pt},
+                underlay boxed title={%
+                \fill[rounded corners=\kvtcb@arc,black,fill=gray!40!white, line width=.5mm]
+                    (title.south east)--++(93:\tcboxedtitleheight)--++(183:\tcboxedtitlewidth)--++(-87:\tcboxedtitleheight)|-cycle;
+                \draw[tcbcolframe, line width=.5mm] (title.south west)|-(frame.north east);
+                }}}%
+%----------------------------------------------------------
+%% 		     style2  		%%%%%%%%%             
+\tcbset{style2/.style={
+  boxrule=0pt,
+  arc=0pt,
+  outer arc=0pt,
+  title style={gray!30!white},
+  overlay={
+    \draw[line width=1.5pt] (frame.south west) -- (frame.south east);
+  }
+}}%
+%----------------------------------------------------------
+%%	           style3		%%%%%%%%%%%%%%%%%
+\tcbset{
+    style3/.style={%
+        attach boxed title to top left={yshift*=-\tcboxedtitleheight}, 
+        boxed title size=title,
+        boxed title style={%
+            sharp corners, 
+            rounded corners=northwest, 
+            colback=tcbcolframe, 
+            boxrule=0pt,
+        },
+        underlay boxed title={%
+            \path[fill=tcbcolframe] (title.south west)--(title.south east) 
+                to[out=0, in=180] ([xshift=5mm]title.east)--
+                (title.center-|frame.east)
+                [rounded corners=\kvtcb@arc] |- 
+                (frame.north) -| cycle; }}}%
+%----------------------------------------------------------
+%%                 style4    		%%%%%%
+ \tcbset{style4/.style={
+    before skip=2mm,after skip=2mm,
+    boxrule=0.4mm,
+    attach boxed title to top left={xshift=1cm,yshift*=1mm-\tcboxedtitleheight},
+    boxed title style={frame code={
+        \draw[fill=tcbcolback!90!gray]
+        ([yshift=-1mm,xshift=-1mm]frame.north west)
+        arc[start angle=0,end angle=180,radius=1mm]
+        ([yshift=-1mm,xshift=1mm]frame.north east)
+        arc[start angle=180,end angle=0,radius=1mm];
+        \draw[left color=tcbcolback!95!gray,right color=tcbcolback!95!gray,
+        middle color=white]
+        ([xshift=-2mm]frame.north west) -- ([xshift=2mm]frame.north east)
+        [rounded corners=1mm]-- ([xshift=1mm,yshift=-1mm]frame.north east)
+        -- (frame.south east) -- (frame.south west)
+        -- ([xshift=-1mm,yshift=-1mm]frame.north west)
+        [sharp corners]-- cycle;
+        },interior engine=empty,
+    }}} 
+%----------------------------------------------------------
+%    		  style5   		%%%%%%%%
+\tcbset{style5/.style={
+    skin=enhancedlast jigsaw,
+    attach boxed title to top left={xshift=-4mm,yshift=-0.5mm},
+    colbacktitle=gray!40!white,
+    interior style={top color=white,bottom color=white},
+    boxed title style={empty,arc=0pt,outer arc=0pt,boxrule=0pt},
+    underlay boxed title={
+        \filldraw[gray!40!white] (title.north west) -- (title.north east)
+        -- +(\tcboxedtitleheight-1mm,-\tcboxedtitleheight+1mm)
+        -- ([xshift=4mm,yshift=0.5mm]frame.north east) -- +(0mm,-1mm)
+        -- (title.south west) -- cycle;
+        \filldraw[blue!45!white!50!black] ([yshift=-0.5mm]frame.north west)
+        -- +(-0.4,0) -- +(0,-0.3) -- cycle;
+        \fill[blue!45!white!50!black] ([yshift=-0.5mm]frame.north east)
+        -- +(0,-0.3) -- +(0.4,0) -- cycle; 
+    }
+}}%
+%----------------------------------------------------------
+%     			style6			%%%%%%%%%%%%%
+% CORRECTION : #1 remplacé par gray (le style n'a pas d'argument)
+\tcbset{style6/.style={
+    before skip=2mm,after skip=0.3cm,
+    bottom=0.5cm,
+    boxrule=0.2mm,arc=2mm,drop midday shadow=gray,
+    attach boxed title to top left={xshift=0cm,yshift*=0mm-\tcboxedtitleheight},
+    boxed title style={frame code={
+            \draw[fill=gray!30!white]
+            ([xshift=+0.5cm]frame.north east)[rounded corners=2mm]--(frame.north west)[sharp corners]--(frame.south west) --(frame.south east)to[out=0,in=180]cycle;
+            \draw[gray]([yshift=-0.5mm]frame.south west)--([yshift=-0.5mm,xshift=+0.4mm]frame.south east)to[out=0,in=180]([yshift=0mm,xshift=+0.58cm]frame.north east);
+        },interior engine=empty,
+    },pad at break*=4mm
+}}%
+%----------------------------------------------------------
+%---------- Style7 -------------------------
+\tcbset{style7/.style={%
+    before=\bigskip\centering,
+    after=\bigskip,
+    enhanced,  colback=white, 
+    sharp corners, 
+    rounded corners=southeast,
+    arc=25pt, 
+    attach boxed title to top left={xshift=5pt}, 
+    boxed title style={%
+        enhanced, 
+        colframe=gray, 
+        colback=gray, 
+        borderline east={1.5pt}{8pt}{white}, 
+        borderline east={1.5pt}{3.5pt}{white},
+        borderline east={3.5pt}{0pt}{white},    
+        borderline east={2.75pt}{0.25pt}{gray!50},    
+        borderline east={2.75pt}{-4pt}{gray!20},    
+        bottomrule=0pt, 
+        rightrule=5pt, 
+        sharp corners, 
+    },
+    interior style={}, 
+    frame code={%
+        \begin{scope}[line width=1.5pt, gray]
+            \fill[shade, bottom color=gray!30, top color=white]
+            ([xshift=-30pt]frame.south east)
+            to[out=0, in=-90] ([yshift=30pt]frame.south east)
+            -- ([shift={(-1pt, 15pt)}]frame.south east)
+            to[out=-90, in=0] ([xshift=-25pt]frame.south east);
+            \draw
+            ([shift={(-1pt, 19pt)}]frame.north west) coordinate (iniPoint)
+            -- ([xshift=-1pt]frame.south west)
+            -- ([xshift=-30pt]frame.south east)
+            to[out=0, in=-90] ([yshift=30pt]frame.south east)
+            -- ([yshift=5pt]frame.north east) -- ++(-5, 0) coordinate (endPoint);
+            \draw (endPoint) -- ++(-5pt, 5pt) -- ++(-5pt, -5pt)     -- ++(5pt, -5pt) -- cycle;
+            \draw (iniPoint) -- ++(4pt, 0) -- ++(-8pt, 0);
+            \draw (iniPoint) ++(0, -10pt) -- ++(6pt, 0) -- ++(-12pt, 0);
+            \draw (iniPoint) ++(0, -14pt) -- ++(6pt, 0) -- ++(-12pt, 0);
+        \end{scope}  
+    }
+}}%
+%----------------------------------------------------------
+%------------ Style8 -----------------------
+\definecolor{textnewGreen}{HTML}{66AE3E}
+\definecolor{bgnewGreen}{HTML}{EBF4DE}
+
+\newtcbox{\titlebox}{%
+  enhanced,
+  colupper=white,
+  colback=textnewGreen,
+  fontupper=\bfseries,
+  size=small,
+  baseline=3pt,
+  nobeforeafter,
+  frame code={%
+    \path[fill=textnewGreen] (frame.north west)
+    -- ([xshift=2mm]frame.north east)
+    -- (frame.south east)
+    -- (frame.south west)
+    -- (frame.north west)
+      [sharp corners]-- cycle;
+  }%
+}%
+
+% CORRECTION : detach title est maintenant actif (nécessaire pour \tcbtitletext)
+\tcbset{style8/.style={%
+  arc=0pt,
+  coltitle=white,
+  fonttitle=\bfseries,
+  detach title,
+  before upper*={%
+    \vskip-\dimexpr\kvtcb@boxsep+\kvtcb@top+.1pt
+    \hspace*{-\dimexpr\kvtcb@boxsep+\kvtcb@leftupper+.1pt}%
+    \expandafter\titlebox\expandafter{\tcbtitletext} %
+  }%
+}}%
+%----------------------------------------------------------
+%=================================================
+%  style9
+%=================================================
+\tcbset{style9/.style={%
+    top=8mm,
+    before skip=5mm,after skip=5mm, 
+    boxsep=1mm,  % CORRECTION : -1mm remplacé par 1mm (évite le texte collé au bord)
+    boxrule=1pt,
+    colframe=cyan,
+    colback=cyan!5,
+    sharp corners,
+    rounded corners=southeast,
+    arc=3mm,
+    drop fuzzy shadow=cyan!50!gray,
+    coltitle=black,
+    attach boxed title to top left={xshift=-2mm,yshift=-\tcboxedtitleheight},
+    boxed title style={%
+        interior empty,
+        frame code={%
+            \fill([xshift=-2mm]frame.north east)arc(180:0:1mm);
+            \fill[right color=gray,left color=gray!50,middle color=gray!50] 
+                ([shift={(.3,.1)}]frame.north west)--([shift={(-.1,.1)}]frame.north east)
+                [rounded corners=1mm]--([xshift=-2mm]frame.north east)
+                --([xshift=-3mm]frame.south east)--([xshift=1mm]frame.south west)
+                --([xshift=2mm]frame.north west)--cycle;
+        }%
+    }%
+}}%
+%=====================================================
+
+%%%%%%%%%%%%	FIN STYLES		%%%%%%%%%%%%%%%   
+
+\endinput

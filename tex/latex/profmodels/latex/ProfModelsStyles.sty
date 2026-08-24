@@ -110,7 +110,7 @@
 \end{tcboxeditemize}
 }%
 %######################################################################
-% PARTIE 2 : BIBLIOTHEQUE DE STYLES GENERIQUES (ex pstyle.sty, v1.00 - 2022/12/30)
+% PARTIE 2 : BIBLIOTHEQUE DE STYLES GENERIQUES (ex pstyle.sty, v1.00 - 2026/08/30)
 % Ces styles (style0 a style8) sont independants de ProfModels et
 % peuvent etre appliques a n'importe quelle tcolorbox, par ex. :
 %   \begin{tcolorbox}[style3,title=Mon titre] ... \end{tcolorbox}
@@ -239,7 +239,7 @@ underlay boxed title={
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %     			style6			%%%%%%%%%%%%%
 \tcbset{style6/.style={
-%enhanced,breakable,
+	enhanced,breakable,
 	before skip=2mm,after skip=0.3cm,
 	bottom=0.5cm,%colframe=black,
 	%colback=gray!2,
@@ -284,32 +284,29 @@ underlay boxed title={
       to[out=0, in=-90] ([yshift=30pt]frame.south east)
       -- ([shift={(-1pt, 15pt)}]frame.south east)
       to[out=-90, in=0] ([xshift=-25pt]frame.south east);
-      \draw
-      ([shift={(-1pt, 19pt)}]frame.north west) coordinate (iniPoint)
+  \draw
+  ([shift={(-1pt, 19pt)}]frame.north west) coordinate (iniPoint)
       -- ([xshift=-1pt]frame.south west)
       -- ([xshift=-30pt]frame.south east)
       to[out=0, in=-90] ([yshift=30pt]frame.south east)
-      -- ([yshift=5pt]frame.north east) -- ++(-5, 0) coordinate (endPoint);
-      \draw (endPoint) -- ++(-5pt, 5pt) -- ++(-5pt, -5pt)     -- ++(5pt, -5pt) -- cycle;
-      \draw (iniPoint) -- ++(4pt, 0) -- ++(-8pt, 0);
-      \draw (iniPoint) ++(0, -10pt) -- ++(6pt, 0) -- ++(-12pt, 0);
-      \draw (iniPoint) ++(0, -14pt) -- ++(6pt, 0) -- ++(-12pt, 0);
+      -- ([yshift=8pt]frame.north east) -- ++(-10, 0) coordinate (endPoint);
+   \draw (endPoint) -- ++(-5pt, 5pt) -- ++(-5pt, -5pt) -- +(5pt, -5pt) -- cycle;
+  \draw (iniPoint) -- ++(4pt, 0) -- ++(-8pt, 0);
+  \draw (iniPoint) ++(0, -10pt) -- ++(6pt, 0) -- ++(-12pt, 0);
+  \draw (iniPoint) ++(0, -14pt) -- ++(6pt, 0) -- ++(-12pt, 0);
     \end{scope}  
 	}}}
 	%------------ Style8 -----------------------
-\definecolor{textnewGreen}{HTML}{66AE3E}
-\definecolor{bgnewGreen}{HTML}{EBF4DE}
-
 \newtcbox{\titlebox}{
   enhanced,
   colupper=white,
-  colback=textnewGreen,
+  colback=black!60,
   fontupper=\bfseries,
   size=small,
   baseline=3pt,
   nobeforeafter,
   frame code={
-    \path[fill=textnewGreen] (frame.north west)
+    \path[fill=black!60] (frame.north west)
     -- ([xshift=2mm]frame.north east)
     -- (frame.south east)
     -- (frame.south west)
@@ -336,18 +333,31 @@ underlay boxed title={
   %=================================================
   \tcbset{style9/.style={%
     top=8mm,
-     before skip=5mm,after skip=5mm, boxsep=-1mm,boxrule=1pt,colframe=cyan,colback=cyan!5,sharp corners,rounded corners=southeast,arc=3mm,
+     before skip=5mm,after skip=5mm, boxsep=-1mm,boxrule=1pt,colframe=gray,sharp corners,rounded corners=southeast,arc=3mm,
         drop fuzzy shadow=cyan!50!gray,
-        coltitle=black,attach boxed title to top left={xshift=-2mm,yshift=-\tcboxedtitleheight},boxed title style={interior empty,
+        coltitle=white,attach boxed title to top left={xshift=0.5cm,yshift=-\tcboxedtitleheight},boxed title style={interior empty,
         frame code={
             \fill([xshift=-2mm]frame.north east)arc(180:0:1mm);
-            \fill[right color=gray,left color=gray!50,middle color=gray!50] ([shift={(.3,.1)}]frame.north west)--([shift={(-.1,.1)}]frame.north east)[rounded corners=1mm]--([xshift=-2mm]frame.north east)--([xshift=-3mm]frame.south east)--([xshift=1mm]frame.south west)--([xshift=2mm]frame.north west)--cycle;
+            \fill[right color=gray,left color=black!70,middle color=black!90] ([shift={(.3,.1)}]frame.north west)--([shift={(-.1,.1)}]frame.north east)[rounded corners=1mm]--([xshift=-2mm]frame.north east)--([xshift=-3mm]frame.south east)--([xshift=1mm]frame.south west)--([xshift=2mm]frame.north west)--cycle;
 }}}}
-
-
-%=====================================================
-
-	        
+%==========================================================
+\tcbset{style10/.style={%
+    enhanced,
+    attach boxed title to top left={yshift=-\tcboxedtitleheight},
+    boxed title style={%
+        size=small,
+        colback=black!70,
+        colframe=black!50,
+        sharp corners=uphill,
+        arc=.5cm,
+        top=1mm,bottom=1mm,left=2mm,right=2mm},
+    fonttitle=\color{white},
+    colframe=gray!80,
+    top=\tcboxedtitleheight,
+    bottom=\tcboxedtitleheight,
+    sharp corners=uphill,
+    arc=.5cm,
+}}
 %%%%%%%%%%%%	FIN STYLES		%%%%%%%%%%%%%%%   
 
 \endinput

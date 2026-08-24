@@ -5,6 +5,7 @@
 
 \ifLuaTeX\else
   \PackageError{ProfModels}{Ce package nécessite LuaLaTeX}{Compilez avec LuaLaTeX.}
+  \endinput
 \fi
 
 %=================================================
@@ -116,8 +117,7 @@ Calculatrice=false,Sujet={}}%
 
 \setKVdefault[Exam]{Prive=true ,Date=\today ,Code={}}%
 \setKVdefault[Olym]{Date=\today ,Code={}}%
-\setKVdefault[Fiche]{Theme= Title ,Date=\today ,Niveau=1,Classe=A.C,Code={},
-NomExercice=Exercice}%
+\setKVdefault[Fiche]{Theme= Title ,Date=\today ,Niveau=1,Classe=A.C,Code={},NomExercice=Exercice}%
 
 
 \setKVdefault[ClesExercices]{BaremeTotal=true,BaremeDetaille=false,MotPoint=point,
@@ -579,8 +579,7 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
   \fi
 }
 %-----------------------------------------------------
-
-\NewDocumentEnvironment{exerciceFiche}{O{}}{%
+\NewDocumentEnvironment{exerciceFiche}{O{} O{tikzfiche}}{%
   \setcounter{PfMAlea}{0}%
   \setcounter{PfMNbLogo}{1}%
   \useKVdefault[ClesExercices]%
@@ -590,11 +589,44 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
   \ifPfMAfficherExo
   \refstepcounter{section}%
   \refstepcounter{PfMExo}%
-  \tcolorbox[%
-  tikzfiche,
-  label is label,
-  label=page-\theMaquette-\thePfMExo
-  ]
+  \IfSubStr{#2}{tikzfiche}{%
+    \tcolorbox[%
+      #2,
+      label is label,
+      label=page-\theMaquette-\thePfMExo
+    ]
+  }{%
+    \tcolorbox[%
+    enhanced,
+      #2,
+        colback=white,
+      title={\useKV[Fiche]{NomExercice}~\thePfMExo\ifboolKV[ClesExercices]{AffichageTitre}{ : \useKV[ClesExercices]{Titre}}{}},%
+      overlay unbroken and first={%
+        \ifboolKV[ClesExercices]{AffichageCompetence}{%
+          \node[%
+          fill=white,
+          anchor=east,
+          xshift=-10pt,
+          text=PfMColCpt,%
+          ]
+          at (frame.north east)
+          {\itshape\scriptsize\sffamily Compétence(s) dominante(s) : \useKV[ClesExercices]{Competence}};
+        }{}%
+        \ifboolKV[ClesExercices]{AffichageSource}{%
+          \node[%
+          fill=white,
+          anchor=east,
+          xshift=-10pt,
+          text=PfMColSrc,
+          ]
+          at (frame.south east)
+          {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
+        }{}%
+      },%
+      label is label,
+      label=page-\theMaquette-\thePfMExo
+    ]
+  }%
   \else
   \setbox\PfMExoPoubelle\vbox\bgroup
   \fi
@@ -604,7 +636,7 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
   \else
     \egroup%
   \fi
-}
+}%
 %-------------------------------------------------------
 \NewDocumentEnvironment{exerciceDS}{O{}O{tikzds}}{%
   \setcounter{PfMAlea}{0}%
@@ -650,7 +682,9 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
         {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
       }{}
       \ifboolKV[ClesExercices]{BaremeTotal}{%
-        \node[
+        \node[%
+        inner ysep=0pt,
+        inner xsep=5pt,
         fill=white,
         anchor=east,
         xshift=-10pt,
