@@ -724,7 +724,7 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
 
 %-------Style Maquette Fiche  -----------------------------
 \NewDocumentCommand\TikzFiche{}{%
-  \begin{tcolorbox}[spread upwards=-1cm,colback=gray!5]%
+  \begin{tcolorbox}[colback=gray!5]%
     \Large\sffamily \useKV[Fiche]{Theme}\hfill\useKV[Fiche]{Niveau} \useKV[Fiche]{Classe}%
     \par{\tiny\useKV[Fiche]{Code}}\hfill{\scriptsize\useKV[Fiche]{Date}}%
   \end{tcolorbox}%
