@@ -305,16 +305,71 @@ AffichageCompetence=false,AffichageSource=false,Id={},Print=true}%
   \endgroup
 }%
 %=====================================================
-\newcommand{\ClassesDisponibles}{Apic1, Apic2, Apic3}
+\newcommand{\ClassesDisponibles}{Tc, BacM1, BacM2, BacPc1, BacPc2, Apic1, Apic2, Apic3}
 \newcommand{\SemestresDisponibles}{Sem1 et Sem2}
-\newcommand{\PartsDisponibles}{Part1, Part2, Part3}
+
+\newif\ifPfM@ClasseValide
+\newif\ifPfM@ClasseCollege
+\newif\ifPfM@ClasseGrandesParties% vrai pour BacM1/BacM2 (4 parties)
+
+\newcommand{\PfM@AnalyserClasse}[1]{%
+  \PfM@ClasseValidefalse
+  \PfM@ClasseCollegefalse
+  \PfM@ClasseGrandesPartiesfalse
+  \def\PfM@tmpA{#1}%
+  \def\PfM@tmpB{Tc}\ifx\PfM@tmpA\PfM@tmpB\PfM@ClasseValidetrue\fi
+  \def\PfM@tmpB{BacPc1}\ifx\PfM@tmpA\PfM@tmpB\PfM@ClasseValidetrue\fi
+  \def\PfM@tmpB{BacPc2}\ifx\PfM@tmpA\PfM@tmpB\PfM@ClasseValidetrue\fi
+  \def\PfM@tmpB{BacM1}\ifx\PfM@tmpA\PfM@tmpB\PfM@ClasseValidetrue\PfM@ClasseGrandesPartiestrue\fi
+  \def\PfM@tmpB{BacM2}\ifx\PfM@tmpA\PfM@tmpB\PfM@ClasseValidetrue\PfM@ClasseGrandesPartiestrue\fi
+  \def\PfM@tmpB{Apic1}\ifx\PfM@tmpA\PfM@tmpB\PfM@ClasseValidetrue\PfM@ClasseCollegetrue\fi
+  \def\PfM@tmpB{Apic2}\ifx\PfM@tmpA\PfM@tmpB\PfM@ClasseValidetrue\PfM@ClasseCollegetrue\fi
+  \def\PfM@tmpB{Apic3}\ifx\PfM@tmpA\PfM@tmpB\PfM@ClasseValidetrue\PfM@ClasseCollegetrue\fi
+}%
+
+\newcommand{\PfM@Dossier}{BankExLycee}% valeur par défaut
+\newcommand{\PfM@NbParts}{3}% valeur par défaut
+
+\newcommand{\PfM@CalculerDossierEtParts}[1]{%
+  \PfM@AnalyserClasse{#1}%
+  \ifPfM@ClasseCollege
+    \renewcommand{\PfM@Dossier}{BankExCollege}%
+  \else
+    \renewcommand{\PfM@Dossier}{BankExLycee}%
+  \fi
+  \ifPfM@ClasseGrandesParties
+    \renewcommand{\PfM@NbParts}{4}%
+  \else
+    \renewcommand{\PfM@NbParts}{3}%
+  \fi
+}%
+
+% Texte informatif (pour les messages d'erreur), qui rappelle le
+% nombre de parties disponibles pour la classe demandée.
+\newcommand{\PartsDisponibles}[1]{%
+  \PfM@CalculerDossierEtParts{#1}%
+  Part1 \'a Part\PfM@NbParts\space (\PfM@NbParts\space partie(s) pour #1)%
+}%
 
 \newcommand{\InputBank}[4]{%
-  \IfFileExists{C:/Users/ELAYDIYAHYA/Documents/latexExam/BankExercices/Apic#1/Sem#2/Part#3/#4.tex}{%
-    \InputBanque{C:/Users/ELAYDIYAHYA/Documents/latexExam/BankExercices/Apic#1/Sem#2/Part#3/#4}%
+  % #1 = classe (Tc, BacM1, BacM2, BacPc1, BacPc2, Apic1, Apic2 ou Apic3)
+  % #2 = semestre, #3 = partie, #4 = nom du fichier
+  \PfM@CalculerDossierEtParts{#1}%
+  \ifPfM@ClasseValide\else
+    \PackageError{InputBank}%
+      {Classe inconnue : #1}%
+      {Classes disponibles : \ClassesDisponibles.}%
+  \fi
+  \ifnum#3>\PfM@NbParts\relax
+    \PackageError{InputBank}%
+      {La classe #1 ne comporte que \PfM@NbParts\space partie(s) : Part#3 est invalide}%
+      {Utilisez une valeur de partie entre 1 et \PfM@NbParts\space pour la classe #1.}%
+  \fi
+  \IfFileExists{C:/Users/ELAYDIYAHYA/Documents/latexExam/\PfM@Dossier/#1/Sem#2/Part#3/#4.tex}{%
+    \InputBanque{C:/Users/ELAYDIYAHYA/Documents/latexExam/\PfM@Dossier/#1/Sem#2/Part#3/#4}%
   }{%
     \PackageError{InputBank}%
-      {Fichier introuvable : Apic#1/Sem#2/Part#3/#4.tex (classes : \ClassesDisponibles\space| semestres : \SemestresDisponibles\space| parties : \PartsDisponibles\space| fichier incorrect)}%
+      {Fichier introuvable : \PfM@Dossier/#1/Sem#2/Part#3/#4.tex (classes : \ClassesDisponibles\space| semestres : \SemestresDisponibles\space| parties : \PartsDisponibles{#1}\space| fichier incorrect)}%
       {V\'erifiez la classe, le semestre, la partie et le nom de fichier pass\'es \`a \string\InputBank.}%
   }%
 }%
@@ -382,17 +437,34 @@ AffichageCompetence=false,AffichageSource=false,Id={},Print=true}%
   }%
 }
 
-% MODIFICATION CLÉE : On teste maintenant LES DEUX conventions
+% MODIFICATION CLÉE : On teste maintenant LES DEUX conventions, et sur
+% TOUS les tirages effectués jusqu'ici (pas seulement le tirage courant) :
+% \ChoisirExercices et \ChoisirExercicesMulti partagent le même compteur
+% \PfMTirage, donc un appel fait APRÈS peut décaler la valeur "courante"
+% avant même que les exercices d'un appel PRÉCÉDENT n'aient été affichés.
+% NB : on n'utilise PAS \foreach (pgffor) ici, car il ouvre un groupe TeX
+% a chaque iteration : un \PfMAfficherExotrue positionne a l'interieur
+% serait alors annule des la fin de l'iteration. On utilise donc une
+% boucle recursive TeX pure, sans groupe cache.
+\newcommand\PfM@BoucleVerifierTirages{%
+  \ifnum\PfM@n>\thePfMTirage\relax
+  \else
+    \@ifundefined{PfMChoisiMULTI\PfM@n @\PfMFichierCourant @\PfMIdCourant}%
+      {%
+        \@ifundefined{PfMChoisi\PfM@n @\PfMIdCourant}%
+          {}%
+          {\PfMAfficherExotrue}%
+      }%
+      {\PfMAfficherExotrue}%
+    \edef\PfM@n{\number\numexpr\PfM@n+1\relax}%
+    \PfM@BoucleVerifierTirages
+  \fi
+}%
 \renewcommand\PfM@VerifierAffichageParTirage{%
   \ifPfMSelectionActive
-    % D'abord on teste le mode MULTI (avec nom de fichier)
-    \@ifundefined{PfMChoisiMULTI\thePfMTirage @\PfMFichierCourant @\PfMIdCourant}%
-      {% Pas trouvé en mode multi, on teste le mode GLOBAL
-        \@ifundefined{PfMChoisi\thePfMTirage @\PfMIdCourant}%
-          {\PfMAfficherExofalse}% Pas trouvé du tout
-          {\PfMAfficherExotrue}%  Trouvé en mode global
-      }%
-      {\PfMAfficherExotrue}% Trouvé en mode multi
+    \PfMAfficherExofalse
+    \def\PfM@n{1}%
+    \PfM@BoucleVerifierTirages
   \else
     \PfMAfficherExotrue
   \fi
