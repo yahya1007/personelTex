@@ -51,7 +51,7 @@
 \RequirePackage[a4paper,left=15mm,right=10mm,top=10mm,
 bottom=10mm,marginparwidth=1cm,marginparsep=2pt,noheadfoot]{geometry}
 %-------------------------------------------------
-\RequirePackage{xcolor}
+\RequirePackage[dvipsnames]{xcolor}
 \RequirePackage{tikz}
 \usetikzlibrary{babel} 
 \usetikzlibrary{calc}
@@ -80,11 +80,24 @@ bottom=10mm,marginparwidth=1cm,marginparsep=2pt,noheadfoot]{geometry}
 \RequirePackage{refcount}
 %---------------------------------------------
 \RequirePackage[inline]{enumitem}
-\setlist[enumerate,1,2]{font=\bfseries,leftmargin=*}
+%\setlist[enumerate,1,2]{font=\bfseries,leftmargin=*}
+%\setlist[itemize,1]{leftmargin=2em, labelsep= 0.8em, labelwidth=1em}
+\newcommand\circitem[2][black]{%
+ \tikz[baseline=(a.base)]{
+ \node[circle,text=#1,line width=0pt,
+ minimum size=1.2em,inner sep=0] (a) {\color{black}#2};
+ \draw[#1,line width=0.7pt,black] (a.135)arc(135:-90:0.6em)--++(-0.8em,0);
+}} 
+\setlist[enumerate,1]{label=\protect\circitem{\arabic*},
+font=\bfseries,leftmargin=*}
+\setlist[enumerate,2]{label=\protect\circitem{\alph*},
+font=\bfseries,leftmargin=*}
 \setlist[itemize,1]{leftmargin=2em, labelsep= 0.8em, labelwidth=1em}
 %----------------------------------------------
 \RequirePackage{tasks}
-\settasks{label-format =\bfseries, label-offset ={0.33em},label-width={1em},item-indent ={2em}}
+%\settasks{label-format =\bfseries, label-offset ={0.33em},label-width={1em},item-indent ={2em}}
+\settasks{counter-format=\protect\circitem{\alph*},
+label-format =\bfseries, label-offset ={1em},label-width={1em},item-indent ={2em}}
 %-------------------------------------------------------
 \RequirePackage{tabularx}
 \RequirePackage[column=O]{cellspace}

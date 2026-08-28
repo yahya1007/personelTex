@@ -1,0 +1,837 @@
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Encodage / langue ----------
+\RequirePackage{fontspec} 
+\setmainfont{Linux Libertine O}
+\RequirePackage{amsmath}
+\RequirePackage{lua-unicode-math} 
+\RequirePackage{lum-xits}
+
+% ---------- Mise en page ----------
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+
+% ---------- Couleurs ----------
+\usepackage[dvipsnames]{xcolor}
+\definecolor{pfmblue}{RGB}{30,80,140}
+\definecolor{pfmgray}{RGB}{90,90,90}
+\definecolor{codebg}{RGB}{245,245,247}
+\definecolor{codeframe}{RGB}{210,210,215}
+
+% ---------- Code LaTeX (listings) ----------
+\usepackage{listings}
+\lstdefinelanguage{latexcode}{
+  morekeywords={},
+  sensitive=true,
+  morecomment=[l]{\%},
+}
+\lstset{
+  language=latexcode,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  xleftmargin=8pt,
+  xrightmargin=8pt,
+  commentstyle=\color{pfmgray}\itshape,
+  showstringspaces=false,
+  columns=fullflexible,
+}
+
+% ---------- Tableaux ----------
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+
+% ---------- Liens et sommaire ----------
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=pfmblue,
+  urlcolor=pfmblue,
+  citecolor=pfmblue,
+  pdftitle={Documentation du package ProfModels},
+  pdfauthor={Documentation générée},
+}
+
+% ---------- Titres de sections ----------
+\titleformat{\section}{\normalfont\Large\bfseries\color{pfmblue}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries\color{pfmblue!80!black}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries\color{pfmgray}}{\thesubsubsection}{0.6em}{}
+
+% ---------- En-têtes / pieds de page ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{Documentation ProfModels}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---------- Boîtes d'avertissement ----------
+\usepackage[most]{tcolorbox}
+\newtcolorbox{avertissement}{
+  colback=orange!8, colframe=orange!70!black,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  fonttitle=\bfseries
+}
+
+% ---------- Commande utilitaire ----------
+\newcommand{\pkg}[1]{\texttt{#1}}
+\newcommand{\cmdname}[1]{\texttt{\textbackslash#1}}
+
+\title{\Huge\bfseries\color{pfmblue} Documentation du package \texttt{ProfModels}}
+\author{}
+\date{Version documentée : 2026/08/04 \\ Compilateur requis : \textbf{LuaLaTeX} exclusivement}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\tableofcontents
+\newpage
+
+%=========================================================
+\section{Présentation générale}
+%=========================================================
+
+\pkg{ProfModels} est un package LaTeX conçu pour un enseignant de mathématiques afin de produire rapidement des documents de classe standardisés :
+
+\begin{itemize}
+  \item \textbf{DM} (Devoir à la Maison)
+  \item \textbf{DS} (Devoir Surveillé)
+  \item \textbf{DevS} (variante « devoir surveillé » avec en-tête allégée)
+  \item \textbf{Exam} (Examen)
+  \item \textbf{Olym} (Olympiades)
+  \item \textbf{Fiche} (fiche d'exercices thématique)
+\end{itemize}
+
+Il fournit :
+
+\begin{itemize}
+  \item une mise en page prête à l'emploi (en-têtes, cartouches, cadres d'exercices) via \pkg{tikz}/\pkg{tcolorbox} ;
+  \item un système de \textbf{clés/valeurs} (via \pkg{simplekv}) pour paramétrer chaque type de document (numéro, date, classe, niveau, etc.) ;
+  \item un système de \textbf{barème automatique} (total des points calculé et reporté sur la copie) ;
+  \item un système de \textbf{tirage aléatoire d'exercices} parmi une banque, avec figeage du tirage pour obtenir un document reproductible ;
+  \item un système de \textbf{permutation} de l'ordre d'affichage des exercices retenus (utile pour créer plusieurs sujets à partir des mêmes exercices, dans un ordre différent) ;
+  \item diverses commandes utilitaires (notations mathématiques, lignes de réponse, etc.).
+\end{itemize}
+
+%=========================================================
+\section{Prérequis et compilation}
+%=========================================================
+
+\subsection{Compilateur}
+
+Le package \textbf{exige LuaLaTeX}. Toute tentative de compilation avec pdfLaTeX ou XeLaTeX déclenche une erreur bloquante :
+
+\begin{lstlisting}
+\ifLuaTeX\else
+  \PackageError{ProfModels}{Ce package necessite LuaLaTeX}{Compilez avec LuaLaTeX.}
+  \endinput
+\fi
+\end{lstlisting}
+
+\subsection{Double compilation}
+
+Comme le package utilise des références croisées (\cmdname{label}/\cmdname{getrefnumber}) pour connaître à l'avance le nombre total d'exercices d'une \texttt{Maquette} ou d'un fichier de banque (nécessaire pour \cmdname{ChoisirExercices}), \textbf{il faut systématiquement compiler deux fois} (voire trois si vous utilisez plusieurs banques imbriquées). Un avertissement explicite est émis dans les logs sinon :
+
+\begin{quote}
+\itshape « Nombre total d'exercices inconnu pour cette Maquette... ceci est normal lors d'une première compilation. »
+\end{quote}
+
+\subsection{Packages requis (chargés automatiquement)}
+
+\pkg{ProfModels} charge lui-même une longue liste de packages, notamment :
+\pkg{fontspec}, \pkg{amsmath}, \pkg{lua-unicode-math}, \pkg{lum-xits}, \pkg{geometry}, \pkg{xcolor}, \pkg{tikz}, \pkg{tcolorbox}, \pkg{changepage}, \pkg{multicol}, \pkg{esvect}, \pkg{graphicx}, \pkg{systeme}, \pkg{ifthen}, \pkg{marginnote}, \pkg{refcount}, \pkg{enumitem}, \pkg{tasks}, \pkg{tabularx}, \pkg{cellspace}, \pkg{cancel}, \pkg{fontawesome}, \pkg{siunitx}, \pkg{calc}, \pkg{xlop}, \pkg{xinttools}, \pkg{wrapstuff}, \pkg{advdate}, \pkg{babel} (option \texttt{french}), \pkg{simplekv}.
+
+Vous n'avez donc \textbf{pas besoin} de les charger vous-même — cela peut même provoquer des conflits d'options.
+
+\subsection{Police}
+
+La police principale imposée est \textbf{Linux Libertine O} (\cmdname{setmainfont\{Linux Libertine O\}}). Elle doit être installée sur le système (ou dans l'arborescence TeX Live/MiKTeX).
+
+%=========================================================
+\section{Chargement du package et options}
+%=========================================================
+
+\begin{lstlisting}
+\documentclass{article}
+\usepackage[all,brouillon]{ProfModels}
+\end{lstlisting}
+
+\subsection{Options de chargement de modules}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Option} & \textbf{Effet} \\
+\midrule
+\texttt{style} & Charge en plus le fichier \texttt{ProfModelsStyles.sty} \\
+\texttt{diag}  & Charge en plus le fichier \texttt{Diagrammes.sty} \\
+\texttt{fig}   & Charge en plus le fichier \texttt{FigMath.sty} \\
+\texttt{all}   & Équivalent à activer \texttt{style}, \texttt{diag} et \texttt{fig} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{avertissement}
+\textbf{Attention} — Ces trois fichiers (\texttt{ProfModelsStyles.sty}, \texttt{Diagrammes.sty}, \texttt{FigMath.sty}) sont des packages \textbf{externes et séparés}, non fournis dans \texttt{ProfModels.sty}. Ils doivent se trouver dans le chemin de recherche de LaTeX (même dossier que le \texttt{.tex} principal, ou dans un dossier \texttt{texmf} local) sous peine d'erreur \textit{File not found}.
+\end{avertissement}
+
+\subsection{Option de filigrane}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Option} & \textbf{Effet} \\
+\midrule
+\texttt{brouillon} & Ajoute un filigrane « BROUILLON » en diagonale sur chaque page \\
+\texttt{final} & (valeur par défaut) Aucun filigrane \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Options inconnues}
+
+Toute option non reconnue déclenche un simple avertissement (\texttt{PackageWarning}), pas une erreur :
+
+\begin{lstlisting}
+LaTeX Warning: Option inconnue 'xxx' in package 'ProfModels'.
+\end{lstlisting}
+
+%=========================================================
+\section{Concepts clés}
+%=========================================================
+
+Avant de détailler les commandes, voici le vocabulaire du package :
+
+\begin{longtable}{@{}p{3cm}p{11.5cm}@{}}
+\toprule
+\textbf{Terme} & \textbf{Signification} \\
+\midrule
+\endhead
+\textbf{Maquette} & Un document complet (un DM, un DS, une fiche...). Chaque \texttt{Maquette} incrémente un compteur global \texttt{Maquette}, ce qui permet de gérer plusieurs maquettes indépendantes dans un même fichier \texttt{.tex}. \\[4pt]
+\textbf{Boulot} & Le \textit{type} de la Maquette : \texttt{Fiche}, \texttt{DM}, \texttt{DS}, \texttt{DevS}, \texttt{Exam} ou \texttt{Olym}. C'est une clé booléenne parmi un jeu de clés \texttt{Boulot}. \\[4pt]
+\textbf{Exercice} & Un bloc de contenu numéroté à l'intérieur d'une \texttt{Maquette}, encadré visuellement selon le type de Boulot. \\[4pt]
+\textbf{Tirage} & Une sélection aléatoire d'exercices parmi un ensemble, réalisée par \cmdname{ChoisirExercices} (ou sa variante multi-fichiers). Le tirage peut être \textit{figé} (rendu reproductible) grâce à une graine (seed) fixée avec \cmdname{FixerTirageExo}. \\[4pt]
+\textbf{Catalogue} & L'ensemble ordonné des exercices présents dans le code source d'une Maquette (ou d'un fichier de banque), numérotés via le compteur \texttt{PfMExoCatalogue}, indépendamment du fait qu'ils soient affichés ou non. \\
+\bottomrule
+\end{longtable}
+
+%=========================================================
+\section{L'environnement \texttt{Maquette}}
+%=========================================================
+
+C'est le point d'entrée principal : tout document produit par \pkg{ProfModels} s'écrit à l'intérieur de cet environnement.
+
+\begin{lstlisting}
+\begin{Maquette}[Boulot=valeur,...]{cles specifiques au Boulot}
+  ...
+  \begin{exercice}
+    ...
+  \end{exercice}
+  ...
+\end{Maquette}
+\end{lstlisting}
+
+\subsection{Syntaxe}
+
+\begin{lstlisting}
+\NewDocumentEnvironment{Maquette}{om}{...}{...}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \textbf{Premier argument [optionnel]} : les clés du jeu \texttt{Boulot} (voir \S\ref{sec:boulot}), typiquement une seule mise à \texttt{true}, par ex. \texttt{[DM=true]}.
+  \item \textbf{Second argument \{obligatoire\}} : les clés spécifiques au type de document choisi (voir \S\ref{sec:cles-boulot}).
+\end{itemize}
+
+À l'ouverture, l'environnement :
+\begin{itemize}
+  \item réinitialise les compteurs \texttt{PfMExo} et \texttt{PfMExoCatalogue} ;
+  \item désactive un éventuel tirage précédent (\texttt{PfMSelectionActive}) ;
+  \item incrémente le compteur global \texttt{Maquette} ;
+  \item affiche l'en-tête correspondant au type choisi (\cmdname{TikzDM}, \cmdname{TikzDS}, \cmdname{TikzFiche}...) ;
+  \item redéfinit localement \cmdname{exercice}/\cmdname{endexercice} pour pointer vers l'environnement d'exercice adapté (voir \S\ref{sec:exercice}).
+\end{itemize}
+
+À la fermeture, l'environnement :
+\begin{itemize}
+  \item déclenche l'affichage des exercices permutés s'il y a eu un appel à \cmdname{permuteExercices} (voir \S\ref{sec:permutation}) ;
+  \item pose un \cmdname{label\{PfMFinMaquette<n>\}} qui mémorise le nombre total d'exercices du catalogue (utilisé par \cmdname{ChoisirExercices} à la compilation suivante).
+\end{itemize}
+
+\subsection{Jeu de clés \texttt{Boulot}}
+\label{sec:boulot}
+
+Valeurs par défaut :
+
+\begin{lstlisting}
+\setKVdefault[Boulot]{Fiche=false,DM=false,DS=false,DevS=false,Exam=false,Olym=false}
+\end{lstlisting}
+
+Une seule de ces clés doit être mise à \texttt{true} par \texttt{Maquette}. Selon la clé activée, l'environnement d'exercice associé change :
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Boulot} & \textbf{En-tête affichée} & \textbf{Environnement \texttt{exercice} utilisé} \\
+\midrule
+\texttt{DM=true}   & \cmdname{TikzDM}   & \texttt{exerciceDM} \\
+\texttt{Fiche=true} & \cmdname{TikzFiche} & \texttt{exerciceFiche} \\
+\texttt{DS=true}   & \cmdname{TikzDS}   & \texttt{exerciceDS} \\
+\texttt{DevS=true} & \cmdname{TikzDevS} & \texttt{exerciceDS} \\
+\texttt{Exam=true} & \cmdname{TikzExam}$^{*}$ & \texttt{exerciceDS} \\
+\texttt{Olym=true} & \cmdname{TikzOlym}$^{*}$ & \texttt{exerciceDS} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{avertissement}
+\textbf{$^{*}$Remarque} — \cmdname{TikzExam} et \cmdname{TikzOlym} sont \textbf{utilisées mais non définies} dans \texttt{ProfModels.sty} : elles doivent provenir d'un module optionnel (probablement \texttt{ProfModelsStyles.sty}, chargé avec l'option \texttt{style}). Sans ce module, l'usage de \texttt{Exam=true} ou \texttt{Olym=true} provoquera une erreur \textit{Undefined control sequence}.
+\end{avertissement}
+
+\subsection{Jeux de clés spécifiques à chaque Boulot}
+\label{sec:cles-boulot}
+
+\textbf{DM} :
+\begin{lstlisting}
+\setKVdefault[DM]{Numero=1, Date=\today, Prive=true, Classe={}, Niveau=3, Code={}, Semestre=1, FinDate=\today}
+\end{lstlisting}
+
+\textbf{DS} :
+\begin{lstlisting}
+\setKVdefault[DS]{Numero=1, Date=\today, Classe={}, Niveau=3, Code={}, Calculatrice=false, Sujet={}}
+\end{lstlisting}
+
+\textbf{Exam} :
+\begin{lstlisting}
+\setKVdefault[Exam]{Prive=true, Date=\today, Code={}}
+\end{lstlisting}
+
+\textbf{Olym} :
+\begin{lstlisting}
+\setKVdefault[Olym]{Date=\today, Code={}}
+\end{lstlisting}
+
+\textbf{Fiche} :
+\begin{lstlisting}
+\setKVdefault[Fiche]{Theme=Title, Date=\today, Niveau=1, Classe=A.C, Code={}, NomExercice=Exercice}
+\end{lstlisting}
+
+\subsection{Exemple d'utilisation}
+
+\begin{lstlisting}
+\begin{Maquette}[DM=true]{Numero=3, Classe=1SM, Niveau=1, Semestre=2,
+                            Date=12/01/2026, FinDate=19/01/2026, Prive=false}
+
+  \begin{exercice}
+    Resoudre l'equation $2x+3=7$.
+  \end{exercice}
+
+\end{Maquette}
+\end{lstlisting}
+
+%=========================================================
+\section{L'environnement \texttt{exercice}}
+\label{sec:exercice}
+%=========================================================
+
+\cmdname{exercice} / \cmdname{endexercice} sont des \textbf{alias} redéfinis dynamiquement par \texttt{Maquette} (voir \S5.1). En dehors d'une \texttt{Maquette}, l'environnement \texttt{exercice} existe (\cmdname{NewDocumentEnvironment\{exercice\}\{\}\{\}\{\}}) mais est \textbf{vide} — il ne produit aucun rendu.
+
+Chaque variante concrète (\texttt{exerciceDM}, \texttt{exerciceFiche}, \texttt{exerciceDS}) partage la même signature :
+
+\begin{lstlisting}
+\begin{exercice}[<cles ClesExercices>][<style tcolorbox>]
+  ...contenu de l'exercice...
+\end{exercice}
+\end{lstlisting}
+
+\begin{itemize}
+  \item \textbf{Premier argument optionnel} : les clés \texttt{ClesExercices} propres à \textit{cet} exercice (voir \S\ref{sec:clesexercices}), par ex. \texttt{[Id=3, Titre=Vecteurs]}.
+  \item \textbf{Second argument optionnel} : le style \texttt{tcolorbox} sous-jacent à utiliser (par défaut \texttt{tikzDM}, \texttt{tikzds}, ou \texttt{tikzfiche} selon le type).
+\end{itemize}
+
+\subsection{Jeu de clés \texttt{ClesExercices}}
+\label{sec:clesexercices}
+
+\begin{lstlisting}
+\setKVdefault[ClesExercices]{
+  BaremeTotal=true, BaremeDetaille=false, MotPoint=point,
+  Calculatrice=true, TitreExo=Exercice, AffichageTitre=false,
+  AffichageCompetence=false, AffichageSource=false, Id={}, Print=true}
+\end{lstlisting}
+
+\begin{longtable}{@{}p{3.6cm}p{11cm}@{}}
+\toprule
+\textbf{Clé} & \textbf{Rôle} \\
+\midrule
+\endhead
+\texttt{BaremeTotal} & Affiche (dans \texttt{exerciceDS}) le total de points calculé automatiquement pour cet exercice, dans le coin du cadre. \\[4pt]
+\texttt{BaremeDetaille} & Affiche en marge, à côté de chaque \cmdname{brm\{...\}}, le nombre de points ponctuel de la question. \\[4pt]
+\texttt{MotPoint} & Mot utilisé après le total (« point » / « points » selon la valeur, avec accord automatique — voir \cmdname{total}). \\[4pt]
+\texttt{Calculatrice} & Clé réservée à un usage éventuel dans un module de style (non exploitée directement dans \texttt{ProfModels.sty}). \\[4pt]
+\texttt{TitreExo} & Libellé générique de l'exercice (non utilisé directement dans le fichier fourni). \\[4pt]
+\texttt{AffichageTitre} & Si \texttt{true}, affiche le titre de l'exercice dans le cadre. \\[4pt]
+\texttt{AffichageCompetence} & Si \texttt{true}, affiche la ou les compétences visées. \\[4pt]
+\texttt{AffichageSource} & Si \texttt{true}, affiche la source de l'exercice en bas du cadre. \\[4pt]
+\texttt{Id} & Identifiant de l'exercice pour le \textbf{tirage aléatoire} (voir \S\ref{sec:tirage}). Un exercice sans \texttt{Id} est \textbf{toujours affiché} (jamais soumis au tirage). \\[4pt]
+\texttt{Print} & Si \texttt{false}, l'exercice n'est \textbf{jamais} affiché (ni compté dans le tirage), quel que soit le tirage en cours. \\
+\bottomrule
+\end{longtable}
+
+Trois alias pratiques sont définis pour raccourcir l'écriture :
+
+\begin{lstlisting}
+Source=...    % equivaut a AffichageSource=...
+Titre=...     % equivaut a AffichageTitre=...
+Competence=...% equivaut a AffichageCompetence=...
+\end{lstlisting}
+
+\begin{avertissement}
+\textbf{Attention à la subtilité} : \texttt{Titre=...} (l'alias) \textit{active/désactive l'affichage}, alors que le \textbf{texte} du titre à afficher est en réalité stocké dans la clé \texttt{Titre} de \texttt{ClesExercices} elle-même (utilisée par \cmdname{useKV[ClesExercices]\{Titre\}} dans les styles). En pratique, écrivez plutôt directement \texttt{AffichageTitre=true, Titre=Mon titre} pour éviter toute ambiguïté.
+\end{avertissement}
+
+\subsection{Exemple}
+
+\begin{lstlisting}
+\begin{exercice}[Id=7, AffichageTitre=true, Titre=Suites, BaremeDetaille=true]
+  Soit $(u_n)$ une suite arithmetique...
+  \brm[2]{1.5}  % 1,5 point, affiche en marge a 2 cm
+\end{exercice}
+\end{lstlisting}
+
+%=========================================================
+\section{Système de barème et de notation}
+%=========================================================
+
+\pkg{ProfModels} calcule automatiquement le total des points d'un devoir, exercice par exercice, à l'aide du package \pkg{xlop} (calculs stockés dans le fichier \texttt{.aux}).
+
+\subsection{\cmdname{brm[décalage]\{points\}}}
+
+À placer à l'intérieur d'un exercice, à chaque question notée :
+
+\begin{lstlisting}
+\brm[1.5]{2}   % ajoute 2 points au total de l'exercice en cours,
+               % affiche "(2 p)" en marge, decalee de 1,5 cm
+\end{lstlisting}
+
+\begin{itemize}
+  \item N'a d'effet que si \texttt{Boulot} n'est ni \texttt{Fiche} ni \texttt{DM} (ces deux contextes désactivent le barème).
+  \item N'écrit dans le \texttt{.aux} que si l'exercice est effectivement affiché (\texttt{PfMAfficherExo}).
+  \item L'affichage visuel du score en marge n'apparaît que si \texttt{BaremeDetaille=true}.
+\end{itemize}
+
+\subsection{\cmdname{total\{<maquette>-<numéro exercice>\}}}
+
+Affiche le total de points calculé pour un exercice donné (ex. \texttt{\textbackslash total\{1-3\}} pour l'exercice 3 de la Maquette n°1). Gère l'accord du mot « point(s) » (clé \texttt{MotPoint}) et le format décimal français (virgule). Émet « recompilez » si la valeur n'est pas encore connue.
+
+Cette commande est appelée automatiquement dans le style \texttt{tikzds} (via \texttt{\textbackslash total\{\textbackslash theMaquette-\textbackslash the\textbackslash c@PfMExo\}}) lorsque \texttt{BaremeTotal=true}.
+
+\subsection{\cmdname{NoteFinale}}
+
+Calcule et affiche la \textbf{somme de tous les totaux d'exercices} de la Maquette courante (utile pour le cartouche de note final d'un DS/Examen). Appelée automatiquement dans \cmdname{TikzDS}. Renvoie « Recompilez » tant que les données ne sont pas disponibles.
+
+\subsection{\cmdname{FranPt\{points\}}}
+
+Commande interne utilisée par \cmdname{brm} pour mettre en forme l'affichage \texttt{(x p)} en marge — n'est utile à appeler directement que si vous personnalisez un style.
+
+%=========================================================
+\section{Tirage aléatoire d'exercices}
+\label{sec:tirage}
+%=========================================================
+
+C'est l'une des fonctionnalités phares du package : piocher aléatoirement $N$ exercices parmi tous ceux écrits dans le fichier source, et obtenir un document \textbf{reproductible} d'une compilation à l'autre.
+
+\subsection{\cmdname{FixerTirageExo\{graine\}}}
+
+À appeler \textbf{avant} \cmdname{ChoisirExercices} (ou sa variante multi-fichiers). Fixe la graine du générateur pseudo-aléatoire de \pkg{pgfmath} :
+
+\begin{lstlisting}
+\FixerTirageExo{42}
+\end{lstlisting}
+
+Sans cet appel, un avertissement est émis (le tirage restera non reproductible, basé sur l'horloge).
+
+\subsection{\cmdname{ChoisirExercices\{N\}[Total]}}
+
+À placer \textbf{au début} de la \texttt{Maquette} (avant les \texttt{\textbackslash begin\{exercice\}}) :
+
+\begin{lstlisting}
+\FixerTirageExo{7}
+\ChoisirExercices{5}          % choisit 5 exercices parmi tous ceux du catalogue
+\end{lstlisting}
+
+\begin{itemize}
+  \item $N$ (obligatoire) : nombre d'exercices à retenir.
+  \item \textit{Total} (optionnel) : nombre total d'exercices disponibles. Si omis, ce nombre est déterminé automatiquement via le \texttt{\textbackslash label\{PfMFinMaquette<n>\}} posé à la compilation précédente (d'où la nécessité de compiler au moins deux fois).
+  \item Erreur si $N$ > total disponible.
+  \item Chaque exercice réellement retenu obtient un affichage (\texttt{PfMAfficherExofalse} sinon), sur la base de son \texttt{Id} (ou, à défaut d'\texttt{Id} explicite, de sa position dans le catalogue).
+  \item Un exercice avec \texttt{Id=ok} (valeur spéciale, la constante interne \texttt{\textbackslash PfM@MotToujours}) est \textbf{toujours affiché}, indépendamment du tirage.
+  \item La sélection reste valide pour \textbf{tous} les exercices qui suivent dans la Maquette, jusqu'à la fin de celle-ci.
+\end{itemize}
+
+\subsection{\cmdname{ListeExercicesChoisis}}
+
+Affiche (à des fins de débogage/vérification) la liste des indices d'exercices effectivement tirés au sort lors du dernier appel à \cmdname{ChoisirExercices}.
+
+\subsection{Comportement de la clé \texttt{Print}}
+
+Indépendamment du tirage, tout exercice avec \texttt{Print=false} n'est jamais affiché et son contenu est simplement absorbé dans une boîte poubelle (\texttt{\textbackslash PfMExoPoubelle}), sans casser la mise en page ni la numérotation logique.
+
+%=========================================================
+\section{Mode multi-fichiers (banques d'exercices)}
+%=========================================================
+
+Ce système permet de répartir les exercices sur \textbf{plusieurs fichiers \texttt{.tex}} externes (des « banques »), organisés par classe/semestre/partie, et de piocher un nombre différent d'exercices dans chacun.
+
+\subsection{Marquer un fichier de banque}
+
+À l'intérieur du fichier de banque lui-même :
+
+\begin{lstlisting}
+\DebutFichierExercices{NomDeLaBanque}
+  \begin{exercice}[...] ... \end{exercice}
+  \begin{exercice}[...] ... \end{exercice}
+  ...
+\FinFichierExercices
+\end{lstlisting}
+
+\begin{itemize}
+  \item \cmdname{DebutFichierExercices\{nom\}} réinitialise le compteur de catalogue et ouvre un groupe TeX.
+  \item \cmdname{FinFichierExercices} ferme ce groupe et pose un \texttt{\textbackslash label\{PfMFinFichier<nom>\}} mémorisant le nombre d'exercices du fichier.
+\end{itemize}
+
+\subsection{Importer un fichier de banque « brut »}
+
+\begin{lstlisting}
+\InputBanque{chemin/vers/fichier}
+\end{lstlisting}
+
+Simple \cmdname{input} encapsulé dans un groupe, avec la variable interne \texttt{\textbackslash PfMEnBanque} définie (usage réservé aux macros internes / futures extensions).
+
+\subsection{\cmdname{InputBank\{Classe\}\{Semestre\}\{Partie\}\{NomFichier\}}}
+
+Variante « intelligente » qui construit elle-même le chemin d'accès à partir d'une classe, d'un semestre et d'une partie, selon une arborescence figée :
+
+\begin{lstlisting}
+\InputBank{BacM1}{1}{2}{Suites}
+\end{lstlisting}
+
+équivaut (en interne) à importer :
+
+\begin{lstlisting}
+<PfM@Dossier>/BacM1/Sem1/Part2/Suites.tex
+\end{lstlisting}
+
+\begin{itemize}
+  \item \textbf{Classes reconnues} (\texttt{\textbackslash ClassesDisponibles}) : \texttt{Tc, BacM1, BacM2, BacPc1, BacPc2, Apic1, Apic2, Apic3}.
+  \begin{itemize}
+    \item \texttt{Apic1/2/3} $\rightarrow$ dossier \texttt{BankExCollege}.
+    \item Toutes les autres $\rightarrow$ dossier \texttt{BankExLycee}.
+    \item \texttt{BacM1} et \texttt{BacM2} disposent de \textbf{4 parties} (« grandes parties »), les autres classes de \textbf{3 parties}.
+  \end{itemize}
+  \item Erreur explicite (\texttt{\textbackslash PackageError}) si la classe est inconnue, si la partie demandée dépasse le nombre de parties disponibles pour cette classe, ou si le fichier n'existe pas — avec un message rappelant les classes/semestres/parties valides.
+  \item \cmdname{PartsDisponibles\{Classe\}} renvoie une phrase indicative du type « Part1 à Part3 (3 partie(s) pour Tc) », utile dans les messages d'erreur personnalisés.
+\end{itemize}
+
+\begin{avertissement}
+Voir \S\ref{sec:chemins} : le chemin racine des banques est actuellement codé en dur en local (\texttt{C:/Users/ELAYDIYAHYA/...}). Voir la section dédiée pour l'adapter.
+\end{avertissement}
+
+\subsection{\cmdname{ChoisirExercicesMulti\{spécification\}}}
+
+Généralisation de \cmdname{ChoisirExercices} pour piocher dans \textbf{plusieurs banques en une seule fois}, avec un nombre d'exercices différent par banque :
+
+\begin{lstlisting}
+\FixerTirageExo{123}
+\ChoisirExercicesMulti{Banque1=3, Banque2=2, Banque3=5}
+\end{lstlisting}
+
+\begin{itemize}
+  \item La spécification est une liste \texttt{NomFichier=NbExercices} séparée par des virgules.
+  \item \texttt{NomFichier} doit correspondre au nom donné à \cmdname{DebutFichierExercices} (ou, via \cmdname{InputBank}, correspondre au nom de fichier passé en 4\textsuperscript{e} argument).
+  \item Chaque banque a son propre espace de tirage (les indices \texttt{PfMChoisiMULTI...} sont préfixés par le nom du fichier), donc pas de collision entre banques.
+  \item Le mécanisme de vérification d'affichage (\texttt{\textbackslash PfM@VerifierAffichageParTirage}) a été \textbf{redéfini} pour tester à la fois les tirages « classiques » et « multi-fichiers », et ce sur \textbf{tous les tirages précédents} de la Maquette, afin de gérer correctement plusieurs appels successifs dans un même document.
+\end{itemize}
+
+%=========================================================
+\section{Permutation de l'ordre d'affichage}
+\label{sec:permutation}
+%=========================================================
+
+Une fois les exercices sélectionnés (via \cmdname{ChoisirExercices}/\cmdname{ChoisirExercicesMulti}, ou même sans tirage), il est possible de \textbf{réordonner} leur affichage — pratique pour générer plusieurs versions d'un même sujet avec un ordre de questions différent (anti-triche).
+
+\subsection{\cmdname{permuteExercices\{liste d'indices\}}}
+
+\begin{lstlisting}
+\permuteExercices{3,1,4,2}
+\end{lstlisting}
+
+\begin{itemize}
+  \item Les indices font référence à la \textbf{position parmi les exercices retenus après tirage} (et non au numéro brut dans le fichier source).
+  \item Techniquement, active un mode de « stockage » : chaque \texttt{\textbackslash exercice...\textbackslash endexercice} rencontré ensuite n'est plus affiché immédiatement, mais mémorisé dans une macro interne (\texttt{PfMStoredExo@<Maquette>@<n>}).
+  \item L'affichage réel dans l'ordre demandé se produit à la \textbf{fermeture de \texttt{\textbackslash end\{Maquette\}}}, via l'appel automatique de \cmdname{AfficherExercicesPermutes}.
+  \item Avertissements automatiques : indice demandé deux fois, exercice retenu non mentionné, ou indice ne correspondant à aucun exercice retenu.
+\end{itemize}
+
+\subsection{\cmdname{AfficherExercicesPermutes}}
+
+Appelée automatiquement en fin de \texttt{Maquette} — vous n'avez normalement \textbf{pas besoin} de l'appeler manuellement.
+
+\subsection{\cmdname{NbExercicesRetenus}}
+
+Renvoie (en tant que nombre, exploitable dans un \texttt{\textbackslash ifnum}) le nombre d'exercices effectivement stockés en attente d'affichage permuté. Utile pour du débogage.
+
+\subsection{Exemple}
+
+\begin{lstlisting}
+\begin{Maquette}[DS=true]{Numero=2, Classe=2SM}
+  \FixerTirageExo{2026}
+  \ChoisirExercices{4}
+  \permuteExercices{2,4,1,3}   % affiche dans cet ordre les 4 exercices retenus
+
+  \begin{exercice} ... \end{exercice}
+  \begin{exercice} ... \end{exercice}
+  \begin{exercice} ... \end{exercice}
+  \begin{exercice} ... \end{exercice}
+  \begin{exercice} ... \end{exercice}   % eventuellement plus, seuls 4 seront gardes
+\end{Maquette}
+\end{lstlisting}
+
+%=========================================================
+\section{Commandes utilitaires diverses}
+%=========================================================
+
+\subsection{Notation mathématique}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Commande} & \textbf{Rendu} \\
+\midrule
+\cmdname{RNum\{n\}} & Chiffre romain \textbf{majuscule} (ex. \texttt{\textbackslash RNum\{4\}} $\to$ IV) \\
+\cmdname{rnum\{n\}} & Chiffre romain \textbf{minuscule} (ex. \texttt{\textbackslash rnum\{4\}} $\to$ iv) \\
+\cmdname{lrp\{...\}} & Parenthèses auto-ajustées : \texttt{\textbackslash left(...\textbackslash right)} \\
+\cmdname{lrc\{...\}} & Crochets auto-ajustés : \texttt{\textbackslash left[...\textbackslash right]} \\
+\cmdname{lra\{...\}} & Accolades auto-ajustées : \texttt{\textbackslash left\textbackslash \{...\textbackslash right\textbackslash \}} \\
+\cmdname{oij} & Raccourci pour $(O,I,J)$ (repère du plan) \\
+\cmdname{pptit} & Alias de $\leqslant$ \\
+\cmdname{pgrd} & Alias de $\geqslant$ \\
+\cmdname{parallel} (redéfini) & Produit $\sslash$ au lieu du symbole standard $\parallel$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Lignes et points de réponse}
+
+\begin{longtable}{@{}p{4cm}p{10.5cm}@{}}
+\toprule
+\textbf{Commande} & \textbf{Rôle} \\
+\midrule
+\endhead
+\cmdname{anserdotline[n][largeur]} & Trace $n$ lignes pointillées de réponse. Sans le second argument optionnel, chaque ligne va jusqu'à la fin de la ligne de texte ; avec, la ligne fait la largeur indiquée. \\[4pt]
+\cmdname{answerlinetowidth[largeur]} & Ligne pointillée de largeur fixe (usage interne, réutilisable directement). \\[4pt]
+\cmdname{answerlinetoeol} & Ligne pointillée jusqu'en fin de ligne courante. \\[4pt]
+\cmdname{answerdotsep} & Longueur définissant l'espacement des points (\texttt{6pt} par défaut). \\[4pt]
+\cmdname{anserline[n]} & Trace $n$ lignes \textbf{continues} horizontales, séparées d'un espace vertical de \texttt{1em}. \\[4pt]
+\cmdname{anserpage[n]} & Insère une nouvelle page « ADDITIONAL ANSWER PAGE » encadrée, suivie de $n$ lignes pointillées (25 par défaut). \\[4pt]
+\cmdname{tr[n]} & Trace un trait continu court de longueur $n$ em (par défaut 5), en gris. \\[4pt]
+\cmdname{cdotsx[n]} (mode maths) & Insère $n$ points de suspension espacés, utile pour un calcul « à trous ». \\
+\bottomrule
+\end{longtable}
+
+\subsection{Longueurs configurables}
+
+\begin{itemize}
+  \item \texttt{\textbackslash BaremeEspace@Marge} (15pt) et \texttt{\textbackslash BaremeEspace@MargeCorrection} (0pt) : réservées pour ajuster le positionnement du barème en marge.
+  \item \texttt{\textbackslash brouillonBrm} : longueur déclarée mais non utilisée directement dans ce fichier.
+\end{itemize}
+
+\subsection{Couleurs prédéfinies}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Nom} & \textbf{Valeur} \\
+\midrule
+\texttt{PfMColCpt} & \texttt{gray!50} (texte "Compétence(s)") \\
+\texttt{PfMColSrc} & \texttt{gray!50} (texte "Source") \\
+\texttt{PfMCadreFiche} & \texttt{gray!50} (cadre d'une fiche) \\
+\texttt{PfMCadreDM} & \texttt{gray!85} (cadre d'un DM/DS) \\
+\texttt{PfMColPoints} & \texttt{black} (affichage des points en marge) \\
+\texttt{washoutgrey} & RGB(140,140,140) \\
+\texttt{lightgrey} & RGB(240,240,240) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Redéfinissables simplement via \texttt{\textbackslash colorlet\{PfMCadreDM\}\{blue!70\}} par exemple, \textbf{après} le chargement du package.
+
+%=========================================================
+\section{Modules optionnels (\texttt{style}, \texttt{diag}, \texttt{fig})}
+%=========================================================
+
+Trois fichiers externes peuvent être chargés conditionnellement :
+
+\begin{lstlisting}
+\ifProfLoadStyle
+  \RequirePackage{ProfModelsStyles}
+\fi
+\ifProfLoadFigure
+  \RequirePackage{FigMath}
+\fi
+\ifProfLoadDiagram
+  \RequirePackage{Diagrammes}
+\fi
+\end{lstlisting}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Module} & \textbf{Activé par} & \textbf{Contenu présumé} \\
+\midrule
+\texttt{ProfModelsStyles} & \texttt{style} (ou \texttt{all}) & Styles graphiques ; contient probablement \cmdname{TikzExam}/\cmdname{TikzOlym} \\
+\texttt{FigMath} & \texttt{fig} (ou \texttt{all}) & Génération de figures mathématiques \\
+\texttt{Diagrammes} & \texttt{diag} (ou \texttt{all}) & Diagrammes (arbres, patates, etc.) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{avertissement}
+Ces trois fichiers \textbf{ne sont pas inclus} dans \texttt{ProfModels.sty} : cette documentation ne peut décrire leur contenu exact sans avoir accès à leur code source. Si vous les utilisez, pensez à les placer dans le même dossier que votre document (ou dans votre arborescence \texttt{texmf} locale) et à les documenter séparément.
+\end{avertissement}
+
+%=========================================================
+\section{Chemins codés en dur --- points de vigilance}
+\label{sec:chemins}
+%=========================================================
+
+Le fichier contient plusieurs chemins \textbf{absolus, propres à une machine Windows précise} :
+
+\begin{lstlisting}
+\providecommand{\ProfModelsImagesPath}{./../../../../Images/}
+\graphicspath{
+  {\ProfModelsImagesPath}
+  {./}
+  {./../../../Images/}
+  {C:/Users/ELAYDIYAHYA/Documents/latexExam/Images/}
+}
+...
+\IfFileExists{C:/Users/ELAYDIYAHYA/Documents/latexExam/\PfM@Dossier/#1/Sem#2/Part#3/#4.tex}{...}
+\end{lstlisting}
+
+\textbf{Conséquence pratique :} sur toute autre machine que celle de l'auteur d'origine, \cmdname{InputBank} échouera systématiquement (chemin introuvable), et la recherche d'images retombera uniquement sur les chemins relatifs (\texttt{./}, \texttt{./../../../Images/}).
+
+\subsection{Recommandations de portage}
+
+\begin{enumerate}
+  \item \textbf{Images} : redéfinissez \cmdname{ProfModelsImagesPath} \textit{avant} \texttt{\textbackslash usepackage\{ProfModels\}} si besoin (c'est un \texttt{\textbackslash providecommand}, donc la première définition rencontrée l'emporte) :
+\begin{lstlisting}
+\newcommand{\ProfModelsImagesPath}{Images/}
+\usepackage{ProfModels}
+\end{lstlisting}
+  \item \textbf{Banques d'exercices (\cmdname{InputBank})} : le chemin \texttt{C:/Users/ELAYDIYAHYA/Documents/latexExam/} est écrit en dur dans la macro \cmdname{InputBank} elle-même. Il n'existe \textbf{aucune commande publique} pour le paramétrer : il faut soit éditer directement le \texttt{.sty}, soit redéfinir \cmdname{InputBank} dans votre document après le chargement du package pour pointer vers votre propre racine de banques.
+  \item Si vous ne comptez pas utiliser \cmdname{InputBank}/\cmdname{InputBanque}, ce point n'a aucun impact : utilisez simplement \cmdname{DebutFichierExercices}/\cmdname{FinFichierExercices}/\texttt{\textbackslash input\{...\}} avec vos propres chemins relatifs.
+\end{enumerate}
+
+%=========================================================
+\section{Exemple complet}
+%=========================================================
+
+\begin{lstlisting}
+\documentclass{article}
+\usepackage[brouillon]{ProfModels}
+
+\begin{document}
+
+\begin{Maquette}[DS=true]{Numero=4, Classe=2BacSM, Niveau=2,
+                           Sujet=Controle continu, Calculatrice=false}
+
+  \FixerTirageExo{2026}
+  \ChoisirExercices{3}
+
+  \begin{exercice}[Id=1, BaremeTotal=true, BaremeDetaille=true]
+    Calculer la derivee de $f(x) = x^2 + 3x - 1$.
+    \brm{1}
+  \end{exercice}
+
+  \begin{exercice}[Id=2, AffichageTitre=true, Titre=Suites, BaremeTotal=true]
+    Soit $(u_n)$ definie par $u_0=1$ et $u_{n+1}=2u_n+3$.
+    \begin{enumerate}
+      \item Calculer $u_1$ et $u_2$. \brm{1}
+      \item Montrer que $(u_n+3)$ est geometrique. \brm{2}
+    \end{enumerate}
+  \end{exercice}
+
+  \begin{exercice}[Id=3, BaremeTotal=true]
+    Resoudre dans $\R$ l'inequation $2x - 5 \pptit 0$.
+    \brm{1.5}
+  \end{exercice}
+
+  \begin{exercice}[Id=4, BaremeTotal=true]
+    Exercice de reserve, non tire si seulement 3 exercices sont choisis.
+    \brm{2}
+  \end{exercice}
+
+\end{Maquette}
+
+\end{document}
+\end{lstlisting}
+
+Compilez \textbf{deux fois} avec \texttt{lualatex} pour que le total de points et le tirage soient corrects.
+
+%=========================================================
+\section{Aide-mémoire (cheat sheet)}
+%=========================================================
+
+\begin{lstlisting}
+% Chargement
+\usepackage[all,brouillon]{ProfModels}   % options: style, diag, fig, all, brouillon, final
+
+% Structure d'un document
+\begin{Maquette}[Boulot=true]{cles...}
+  \begin{exercice}[ClesExercices...][style tcolorbox]
+    ...
+    \brm[decalage]{points}
+  \end{exercice}
+\end{Maquette}
+
+% Tirage aleatoire (mono-fichier)
+\FixerTirageExo{graine}
+\ChoisirExercices{N}[Total]
+
+% Tirage aleatoire (multi-fichiers / banques)
+\DebutFichierExercices{Nom} ... \FinFichierExercices
+\InputBanque{chemin}
+\InputBank{Classe}{Semestre}{Partie}{Fichier}
+\ChoisirExercicesMulti{Fichier1=n1, Fichier2=n2, ...}
+
+% Permutation de l'ordre affiche
+\permuteExercices{i1,i2,i3,...}
+\NbExercicesRetenus
+
+% Bareme
+\brm[decalage]{points}
+\total{Maquette-NumExo}
+\NoteFinale
+
+% Utilitaires
+\RNum{n} \rnum{n} \lrp{} \lrc{} \lra{} \oij \pptit \pgrd
+\anserdotline[n][largeur] \anserline[n] \anserpage[n] \tr[n] \cdotsx[n]
+\end{lstlisting}
+
+\subsection*{Limitations connues}
+
+\begin{itemize}
+  \item \cmdname{TikzExam} et \cmdname{TikzOlym} ne sont pas définies dans ce fichier : \texttt{Boulot=Exam} / \texttt{Boulot=Olym} nécessitent le module \texttt{ProfModelsStyles} (option \texttt{style}).
+  \item Les chemins d'\cmdname{InputBank} sont codés en dur pour une machine précise (voir \S\ref{sec:chemins}).
+  \item Nécessite obligatoirement LuaLaTeX et la police Linux Libertine O installée.
+  \item Double (ou triple) compilation nécessaire pour que les totaux et tirages soient corrects.
+\end{itemize}
+
+\end{document}

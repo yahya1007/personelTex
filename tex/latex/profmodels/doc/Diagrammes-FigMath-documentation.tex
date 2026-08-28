@@ -1,0 +1,756 @@
+\documentclass[11pt,a4paper]{article}
+
+% ---------- Encodage / langue ----------
+\RequirePackage{fontspec} 
+\setmainfont{Linux Libertine O}
+\RequirePackage{amsmath}
+\RequirePackage{lua-unicode-math} 
+\RequirePackage{lum-xits}
+
+% ---------- Mise en page ----------
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+
+% ---------- Couleurs ----------
+\usepackage[dvipsnames]{xcolor}
+\definecolor{pfmblue}{RGB}{30,80,140}
+\definecolor{diagteal}{RGB}{20,120,110}
+\definecolor{figpurple}{RGB}{110,60,150}
+\definecolor{pfmgray}{RGB}{90,90,90}
+\definecolor{codebg}{RGB}{245,245,247}
+\definecolor{codeframe}{RGB}{210,210,215}
+
+% ---------- Code LaTeX (listings) ----------
+\usepackage{listings}
+\lstdefinelanguage{latexcode}{
+  morekeywords={},
+  sensitive=true,
+  morecomment=[l]{\%},
+}
+\lstset{
+  language=latexcode,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  xleftmargin=8pt,
+  xrightmargin=8pt,
+  commentstyle=\color{pfmgray}\itshape,
+  showstringspaces=false,
+  columns=fullflexible,
+}
+
+% ---------- Tableaux ----------
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+
+% ---------- Liens et sommaire ----------
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=pfmblue,
+  urlcolor=pfmblue,
+  citecolor=pfmblue,
+  pdftitle={Documentation des packages Diagrammes et FigMath},
+  pdfauthor={Documentation générée},
+}
+
+% ---------- Titres de sections ----------
+\titleformat{\section}{\normalfont\Large\bfseries\color{pfmblue}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries\color{pfmblue!80!black}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries\color{pfmgray}}{\thesubsubsection}{0.6em}{}
+
+% ---------- En-têtes / pieds de page ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{Documentation Diagrammes \& FigMath}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---------- Boîtes ----------
+\usepackage[most]{tcolorbox}
+\newtcolorbox{avertissement}{
+  colback=orange!8, colframe=orange!70!black,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  fonttitle=\bfseries
+}
+\newtcolorbox{noteDiag}{
+  colback=diagteal!6, colframe=diagteal!70!black,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  fonttitle=\bfseries
+}
+\newtcolorbox{noteFig}{
+  colback=figpurple!6, colframe=figpurple!70!black,
+  boxrule=0.6pt, arc=2pt, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  fonttitle=\bfseries
+}
+
+% ---------- Commandes utilitaires ----------
+\newcommand{\pkg}[1]{\texttt{#1}}
+\newcommand{\cmdname}[1]{\texttt{\textbackslash#1}}
+
+\title{\Huge\bfseries\color{pfmblue} Documentation des packages\\[2pt] \texttt{Diagrammes} et \texttt{FigMath}}
+\author{}
+\date{\pkg{Diagrammes} v2.01 (2026/08/11) \quad---\quad \pkg{FigMath} v1.06 (2026/08/18)\\
+Modules optionnels du package \texttt{ProfModels} (options \texttt{diag} et \texttt{fig})}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\tableofcontents
+\newpage
+
+%=========================================================
+\section{Présentation générale}
+%=========================================================
+
+Ce document réunit la documentation de deux packages LaTeX complémentaires, dédiés à la production de figures pour des documents de mathématiques :
+
+\begin{itemize}
+  \item \textbf{\pkg{Diagrammes}} : repères et droites graduées (via \pkg{tkz-euclide}), et un système complet d'\textbf{histogrammes}/diagrammes statistiques paramétrables par clés (\pkg{simplekv}).
+  \item \textbf{\pkg{FigMath}} : une bibliothèque de \textbf{figures géométriques prêtes à l'emploi} — solides usuels en perspective cavalière (cylindre, cône, cube, prisme, pyramide, tétraèdre) et figures planes (carré, rectangle, parallélogramme, losange, trapèze, triangle, cercle, configuration de Thalès, parallèles coupées par une sécante).
+\end{itemize}
+
+Ces deux fichiers sont conçus pour être chargés par le package \texttt{ProfModels} via ses options \texttt{diag} et \texttt{fig} (ou \texttt{all}), mais peuvent aussi être utilisés indépendamment :
+
+\begin{lstlisting}
+\usepackage{Diagrammes}
+\usepackage{FigMath}
+\end{lstlisting}
+
+\begin{avertissement}
+\textbf{Compilateur} — \pkg{FigMath} charge \texttt{tkz-euclide} avec l'option \texttt{[lua]} (\texttt{\textbackslash RequirePackage[lua]\{tkz-euclide\}}), tout comme \pkg{Diagrammes}. Il est donc recommandé, comme pour \pkg{ProfModels}, de compiler avec \textbf{LuaLaTeX}.
+\end{avertissement}
+
+%=========================================================
+\part*{Partie I --- Le package \texttt{Diagrammes}}
+\addcontentsline{toc}{part}{Partie I --- Le package Diagrammes}
+%=========================================================
+
+\section{Dépendances et chargement}
+
+\pkg{Diagrammes} charge automatiquement (si absents) :
+\pkg{tkz-base}, \pkg{tkz-euclide} (option \texttt{lua}), \pkg{tikz} (bibliothèques \texttt{calc} et \texttt{arrows.meta}), \pkg{xstring}, \pkg{simplekv}, \pkg{listofitems}, \pkg{xintexpr}, \pkg{siunitx}, \pkg{xfp}, ainsi que \pkg{pgf-pie} (utilisé pour d'éventuels histogrammes circulaires).
+
+\begin{lstlisting}
+\usepackage{Diagrammes}
+\end{lstlisting}
+
+%=========================================================
+\section{Environnement \texttt{Repere}}
+%=========================================================
+
+Trace un repère orthonormé gradué (quadrillage principal + sous-graduations), à l'aide de \pkg{tkz-euclide}.
+
+\subsection{Syntaxe}
+
+\begin{lstlisting}
+\begin{Repere}[xmin][xmax][ymin][ymax]
+  \coordpoints{x}{y}{Nom}{x2}{y2}{Nom2}...
+\end{Repere}
+\end{lstlisting}
+
+Les quatre arguments optionnels fixent les bornes des axes (défauts : \texttt{xmin=-4, xmax=5, ymin=-3, ymax=5}). En interne, l'environnement appelle \texttt{\textbackslash tkzInit}, \texttt{\textbackslash tkzGrid} (avec sous-graduations de pas 0.5), \texttt{\textbackslash tkzLabelX}, \texttt{\textbackslash tkzLabelY} et \texttt{\textbackslash tkzDrawXY}.
+
+\subsection{\cmdname{coordpoints}}
+
+\begin{lstlisting}
+\coordpoints{x1}{y1}{A}{x2}{y2}{B}{x3}{y3}{C}...
+\end{lstlisting}
+
+Place un nombre \emph{arbitraire} de points, groupés par triplets \texttt{(x, y, Nom)}, à la suite les uns des autres (mécanisme interne de « grignotage » des arguments via \cmdname{checknextarg}/\cmdname{gobblenextarg}, basé sur \texttt{\textbackslash @ifnextchar\textbackslash bgroup}). Chaque point est dessiné (\texttt{\textbackslash tkzDrawPoint}) et étiqueté automatiquement :
+\begin{itemize}
+  \item en dessous à droite (\texttt{below right}) si l'ordonnée $y$ est négative ;
+  \item au-dessus à droite (\texttt{above right}) sinon.
+\end{itemize}
+
+\subsection{Exemple}
+
+\begin{lstlisting}
+\begin{Repere}[-3][6][-2][4]
+  \coordpoints{2}{3}{A}{-1}{-1}{B}{4}{0}{C}
+\end{Repere}
+\end{lstlisting}
+
+%=========================================================
+\section{Environnement \texttt{DroiteGraduee}}
+%=========================================================
+
+Trace une droite numérique graduée, avec sous-graduations optionnelles, puis permet de placer des points nommés dessus.
+
+\subsection{Syntaxe}
+
+\begin{lstlisting}
+\begin{DroiteGraduee}[xmin][xmax][pas][sous-graduations]
+  \pointgradue{x1}{Nom1}{x2}{Nom2}...
+\end{DroiteGraduee}
+\end{lstlisting}
+
+\begin{center}
+\begin{tabular}{@{}clc@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\#1 & abscisse minimale & $-5$ \\
+\#2 & abscisse maximale & $5$ \\
+\#3 & pas des graduations principales (numérotées) & $1$ \\
+\#4 & nombre de sous-graduations entre deux graduations principales & $0$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{noteDiag}
+\textbf{Remarque technique} — Le nombre de graduations est calculé avec \texttt{\textbackslash pgfmathtruncatemacro} puis parcouru par une boucle \texttt{\textbackslash foreach} sur des \emph{entiers}, plutôt que d'utiliser directement un pas décimal dans le \texttt{\textbackslash foreach} (ce qui casserait la compilation dès que le pas n'est pas un entier « simple »).
+\end{noteDiag}
+
+\subsection{\cmdname{pointgradue}}
+
+\begin{lstlisting}
+\pointgradue{-1.5}{A}{2}{B}{4.5}{C}{6}{H}
+\end{lstlisting}
+
+Comme pour \cmdname{coordpoints}, un nombre arbitraire de couples \texttt{(abscisse, nom)} peut être enchaîné. Chaque point est représenté par un disque (\texttt{\textbackslash filldraw ... circle (1.5pt)}) et étiqueté au-dessus.
+
+\subsection{Exemple complet}
+
+\begin{lstlisting}
+\begin{DroiteGraduee}[-3][6][1][5]
+\pointgradue{-1.5}{A}{2}{B}{4.5}{C}{6}{H}
+\end{DroiteGraduee}
+\end{lstlisting}
+
+%=========================================================
+\section{Système d'histogrammes (jeu de clés \texttt{histostats})}
+%=========================================================
+
+C'est la partie la plus riche de \pkg{Diagrammes} : trois commandes de tracé (\cmdname{Histogramme}, \cmdname{HistogrammeTikz}, \cmdname{HistogrammeDensite}) partagent un même jeu de clés \texttt{histostats}, défini avec \pkg{simplekv}.
+
+\subsection{Jeu de clés \texttt{histostats}}
+\label{sec:histostats}
+
+\begin{longtable}{@{}p{3.6cm}p{3cm}p{7cm}@{}}
+\toprule
+\textbf{Clé} & \textbf{Défaut} & \textbf{Rôle} \\
+\midrule
+\endhead
+\texttt{ListeCouleurs} & \texttt{auto} & Liste de couleurs séparées par des virgules pour les barres ; \texttt{auto} utilise la palette cyclique \texttt{\textbackslash HistoAutoColors} (10 couleurs). \\[3pt]
+\texttt{Largeur} & \texttt{10} & Largeur totale du graphique (cm), sert à calculer l'unité \texttt{x}. \\[3pt]
+\texttt{Hauteur} & \texttt{5} & Hauteur totale du graphique (cm), sert à calculer l'unité \texttt{y}. \\[3pt]
+\texttt{GradX} & \texttt{\{\}} (auto) & Liste explicite des graduations de l'axe des abscisses ; si vide, calculée automatiquement (pas « propre » via \texttt{\textbackslash Histo@NiceStep}). Accepte les valeurs symboliques \texttt{Min}/\texttt{Max}. \\[3pt]
+\texttt{GradY} & \texttt{\{\}} (auto) & Idem pour l'axe des ordonnées. \\[3pt]
+\texttt{AffEffectifs} & \texttt{true} & Affiche ou non la valeur (effectif/fréquence) au-dessus/dans chaque barre. \\[3pt]
+\texttt{PosEffectifs} & \texttt{milieu} & Position du label d'effectif : \texttt{milieu} (dans la barre), \texttt{bas} (au pied), \texttt{haut} (juste sous le sommet), ou toute autre valeur $\Rightarrow$ au-dessus de la barre. \\[3pt]
+\texttt{ElargirX / ElargirY} & \texttt{5mm} & Prolongement des axes au-delà du dernier trait, pour laisser de la place au label d'axe et à la flèche. \\[3pt]
+\texttt{LabelX / LabelY} & \texttt{\{\}} & Texte affiché au bout de chaque axe (uniquement si \texttt{AfficheAxes=true}). \\[3pt]
+\texttt{PoliceAxes} & \texttt{\textbackslash normalsize\textbackslash normalfont} & Police utilisée pour les graduations et labels d'axes. \\[3pt]
+\texttt{PoliceEffectifs} & \texttt{\textbackslash normalsize\textbackslash normalfont} & Police utilisée pour les valeurs d'effectifs. \\[3pt]
+\texttt{AffBornes} & \texttt{false} & Affiche, sous chaque barre, les deux bornes de sa classe (utile pour des classes d'amplitude inégale). \\[3pt]
+\texttt{Remplir} & \texttt{true} & Barres remplies (\texttt{true}) ou juste contourées (\texttt{false}). \\[3pt]
+\texttt{Opacite} & \texttt{0.5} & Opacité du remplissage des barres. \\[3pt]
+\texttt{GrilleV} & \texttt{true} & Affiche des lignes horizontales fines au niveau de chaque graduation \texttt{GradY} (uniquement pour \cmdname{Histogramme}). \\[3pt]
+\texttt{DebutOx / FinOx} & \texttt{\{\}} (auto) & Bornes explicites de l'axe des $x$ ; si vide, prises automatiquement à partir des données (première/dernière borne de classe). Accepte \texttt{Min}/\texttt{Max}. \\[3pt]
+\texttt{EpaisseurTraits} & \texttt{semithick} & Style d'épaisseur \texttt{tikz} utilisé pour tous les traits (axes, graduations, contours). \\[3pt]
+\texttt{Grille} & \texttt{\{\}} & Clé déclarée mais non exploitée directement dans le fichier fourni (réservée). \\[3pt]
+\texttt{OrigineX} & \texttt{0} & Abscisse d'origine utilisée par \cmdname{HistogrammeTikz} (accepte la valeur \texttt{Min}, auquel cas l'origine est calée sur la première borne des données). \\[3pt]
+\texttt{ArrondiY} & \texttt{3} & Nombre de décimales utilisées pour arrondir les hauteurs/densités maximales calculées. \\[3pt]
+\texttt{AfficheAxes} & \texttt{true} & Si \texttt{false}, seul un simple segment horizontal est tracé (pas de flèches ni de labels d'axes) — utilisé par \cmdname{Histogramme} uniquement. \\[3pt]
+\texttt{EspaceBarres} & \texttt{0} & Fraction (entre 0 et 1) de la largeur de chaque barre transformée en espace blanc de part et d'autre (0 = barres jointives). \\[3pt]
+\texttt{Titre} & \texttt{\{\}} & Titre affiché au-dessus du graphique (\cmdname{Histogramme} uniquement). \\[3pt]
+\texttt{PoliceTitre} & \texttt{\textbackslash large\textbackslash bfseries} & Police du titre. \\
+\bottomrule
+\end{longtable}
+
+\subsection{\cmdname{Histogramme[clés]\{données\}}}
+
+Trace un histogramme statistique complet et autonome (axes, grille, graduations automatiques « propres », effectifs, titre).
+
+\subsubsection{Format des données}
+
+Chaque classe est décrite par \texttt{borneInf/borneSup.effectif}, les classes étant séparées par un espace :
+
+\begin{lstlisting}
+\Histogramme[Largeur=10,Hauteur=8,%
+  ListeCouleurs={orange,gray,blue,pink,red,black},%
+  DebutOx=5,FinOx=18,GradX={5,7,...,17},GradY={0,25,...,175},%
+  AffEffectifs=false,LabelX={l'age},LabelY={taille en (cm)},%
+  EspaceBarres=0.15,Titre={Repartition des tailles}]%
+  {5/7/25 7/9/130 9/11/175 11/13/182 13/15/95 15/17/75}
+\end{lstlisting}
+
+\subsubsection{Fonctionnement interne (résumé)}
+
+\begin{enumerate}
+  \item Analyse des données (\texttt{\textbackslash readlist*\textbackslash LISTDONNEES}, séparateurs \texttt{.} et \texttt{ /}).
+  \item Calcul de la hauteur maximale brute et arrondie (\texttt{\textbackslash maxhauteursbrut}, \texttt{\textbackslash maxhauteurs}) via \texttt{xintexpr} (\cmdname{fpeval}).
+  \item Détermination des bornes \texttt{DebutOx}/\texttt{FinOx} (auto si non précisées, ou substitution des mots-clés \texttt{Min}/\texttt{Max}).
+  \item \textbf{Garde-fou} : une \texttt{\textbackslash PackageError} est levée si \texttt{FinOx < DebutOx}.
+  \item Génération automatique de graduations « propres » (\texttt{\textbackslash Histo@NiceStep}, pas parmi $\{1,2,5,10,20,25,50,100,\dots\}\times 10^n$) si \texttt{GradX}/\texttt{GradY} sont vides.
+  \item Attribution cyclique des couleurs (\texttt{\textbackslash Histo@SetColor}), à partir de la palette \texttt{ListeCouleurs} ou de \texttt{\textbackslash HistoAutoColors}.
+  \item Tracé dans un \texttt{tikzpicture} redimensionné (\texttt{x=\dots cm, y=\dots cm}) pour respecter exactement \texttt{Largeur}/\texttt{Hauteur}.
+\end{enumerate}
+
+\begin{noteDiag}
+\textbf{Astuce} — Les échelles \texttt{x} et \texttt{y} du \texttt{tikzpicture} sont calculées automatiquement (\texttt{\textbackslash HistoUniteX}, \texttt{\textbackslash HistoUniteY}) pour que la figure occupe exactement \texttt{Largeur}\,cm $\times$ \texttt{Hauteur}\,cm, quelles que soient les valeurs numériques des données.
+\end{noteDiag}
+
+\subsection{\cmdname{HistogrammeTikz[clés]\{données\}}}
+
+Variante « légère » : ne dessine \textbf{que les barres et les effectifs}, \textbf{sans} axes ni graduations ni redimensionnement automatique — pensée pour être insérée directement à l'intérieur d'un \texttt{tikzpicture} déjà ouvert par ailleurs (par exemple superposée à un \texttt{Repere}).
+
+\begin{lstlisting}
+\begin{tikzpicture}
+  ...
+  \HistogrammeTikz[OrigineX=Min]{5/7/25 7/9/130 9/11/175}
+  ...
+\end{tikzpicture}
+\end{lstlisting}
+
+La clé \texttt{OrigineX} y joue un rôle particulier : si elle vaut \texttt{Min}, l'origine des barres est calée sur la première borne des données (\texttt{\textbackslash itemtomacro\textbackslash LISTDONNEES[1,1]\{\textbackslash axexOx\}}) ; sinon, la valeur numérique fournie est utilisée telle quelle comme décalage.
+
+\subsection{\cmdname{HistogrammeDensite[clés]\{données\}}}
+
+Trace un histogramme des \textbf{densités} (effectif $\div$ amplitude de la classe) plutôt que des effectifs bruts — utile pour des classes d'amplitudes inégales, conformément à la convention statistique usuelle.
+
+\begin{lstlisting}
+\HistogrammeDensite[Largeur=12,Hauteur=6,LabelX={ages},LabelY={densite}]%
+  {0/5/20 5/10/45 10/20/60 20/40/30}
+\end{lstlisting}
+
+Le fonctionnement est similaire à \cmdname{Histogramme} (bornes auto, graduations « propres » auto), mais la hauteur de chaque barre est recalculée comme \texttt{effectif/(borneSup-borneInf)}, et les graduations \texttt{Min}/\texttt{Max} de \texttt{GradY} font référence à la densité maximale (\texttt{\textbackslash maxdensite}) plutôt qu'à l'effectif maximal.
+
+%=========================================================
+\section{Aide-mémoire --- \texttt{Diagrammes}}
+%=========================================================
+
+\begin{lstlisting}
+% Chargement
+\usepackage{Diagrammes}
+
+% Repere
+\begin{Repere}[xmin][xmax][ymin][ymax]
+  \coordpoints{x}{y}{Nom}...
+\end{Repere}
+
+% Droite graduee
+\begin{DroiteGraduee}[xmin][xmax][pas][sous-grad]
+  \pointgradue{x}{Nom}...
+\end{DroiteGraduee}
+
+% Histogrammes (cles histostats communes, voir tableau 5.1)
+\Histogramme[cles]{b1/b2.eff b2/b3.eff ...}
+\HistogrammeTikz[cles]{...}          % a inserer dans un tikzpicture existant
+\HistogrammeDensite[cles]{...}       % histogramme de densites (classes inegales)
+\end{lstlisting}
+
+%=========================================================
+\part*{Partie II --- Le package \texttt{FigMath}}
+\addcontentsline{toc}{part}{Partie II --- Le package FigMath}
+%=========================================================
+
+\section{Dépendances, chargement et mécanismes communs}
+
+\pkg{FigMath} charge \pkg{etoolbox}, \pkg{xparse}, \pkg{tkz-base} et \pkg{tkz-euclide} (option \texttt{lua}).
+
+\begin{lstlisting}
+\usepackage{FigMath}
+\end{lstlisting}
+
+Toutes les figures doivent être tracées à l'intérieur d'un environnement \texttt{tikzpicture} :
+
+\begin{lstlisting}
+\begin{tikzpicture}
+  \cube{4}{3}
+\end{tikzpicture}
+\end{lstlisting}
+
+\subsection{Mécanismes internes communs}
+
+\begin{itemize}
+  \item \cmdname{figsetdefault\{valeurFournie\}\{valeurParDefaut\}\{\textbackslash macroCible\}} : si \texttt{valeurFournie} est vide (argument optionnel non renseigné), affecte la valeur par défaut à la macro cible, sinon affecte la valeur fournie. Utilisé systématiquement pour gérer les arguments optionnels \texttt{[angle]}/\texttt{[labels]} de toutes les commandes de figures.
+  \item \cmdname{figlabelitem\{listeLabels\}\{indice\}} : extrait le $i$-ème élément d'une liste de labels séparés par des virgules (repose sur \texttt{\textbackslash clist\_item:on} d'\pkg{expl3}). Permet de personnaliser le nom des sommets d'une figure (par ex. \texttt{[A',B',C']} au lieu de \texttt{[A,B,C]}).
+\end{itemize}
+
+\begin{noteFig}
+\textbf{Convention générale} — Dans (presque) toutes les commandes de \pkg{FigMath}, le \textbf{premier argument optionnel} (souvent noté \texttt{[angle]}) contrôle la perspective ou l'orientation de la figure, et le \textbf{second argument optionnel} (\texttt{[labels]}) permet de renommer les sommets (liste séparée par des virgules, dans l'ordre où ils sont introduits par la commande).
+\end{noteFig}
+
+%=========================================================
+\section{Figures 3D}
+%=========================================================
+
+Toutes les figures 3D sont dessinées en perspective cavalière à l'aide de \pkg{tkz-euclide}, avec gestion automatique des faces/arêtes cachées (traits pointillés) et visibles (traits pleins).
+
+\subsection{\cmdname{cylindre[arc][prefixe]\{rayon\}\{hauteur\}}}
+
+Trace un cylindre en perspective.
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{[arc]} & demi-petit-axe de l'ellipse (aplatissement) & \texttt{0.5} \\
+\texttt{[prefixe]} & nom du point central de la base & \texttt{O} \\
+\texttt{\{rayon\}} & rayon du cylindre (obligatoire) & --- \\
+\texttt{\{hauteur\}} & hauteur du cylindre (obligatoire) & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+\cylindre[0.5]{2}{4}
+\end{lstlisting}
+
+Points définis automatiquement (utilisables ensuite, préfixés par \texttt{prefixe}, ici \texttt{O}) : \texttt{O} (centre base), \texttt{Oh} (centre sommet), \texttt{OD/OG} (droite/gauche base), \texttt{ODh/OGh} (idem sommet), \texttt{OAv/OAr} (avant/arrière base), \texttt{OAvh/OArh} (idem sommet).
+
+\subsection{\cmdname{cylpoint\{angle\}\{bas|haut\}\{nom\}}}
+
+À appeler \textbf{juste après} \cmdname{cylindre}, dans le \emph{même} \texttt{tikzpicture} : place un point sur le contour elliptique (base ou sommet) à l'angle donné, en degrés.
+
+\begin{lstlisting}
+\cylindre[0.5]{2}{4}
+\foreach \pt in {O,Oh,OD,OG,ODh,OGh,OAv,OAr,OAvh,OArh}{
+  \tkzDrawPoint[red](\pt)
+  \tkzLabelPoint[above right](\pt){\tiny\pt}
+}
+\cylpoint{30}{haut}{M}
+\end{lstlisting}
+
+\begin{avertissement}
+Une erreur explicite (\texttt{\textbackslash PackageError\{cylindre\}}) est levée si \cmdname{cylpoint} est utilisé sans appel préalable à \cmdname{cylindre} dans la figure courante.
+\end{avertissement}
+
+\subsection{\cmdname{cone*[arc][labels]\{rayon\}\{hauteur\}}}
+
+Trace un cône en perspective. La forme étoilée \texttt{cone*} affiche en plus le rayon de la base (segments \texttt{OA}, \texttt{OB} en pointillés) et les points \texttt{A}/\texttt{B} sur le cercle de base.
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{[arc]} & aplatissement de l'ellipse de base & \texttt{0.5} \\
+\texttt{[labels]} & noms des 4 points (centre, sommet, 2 pts base) & \texttt{O,S,A,B} \\
+\texttt{\{rayon\}} & rayon de la base & --- \\
+\texttt{\{hauteur\}} & hauteur du cône & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+\cone*[0.4][O,S,A,B]{3}{5}
+\end{lstlisting}
+
+\subsection{\cmdname{cube[angle][labels]\{longueur\}\{hauteur\}}}
+
+Trace un cube (ou pavé) en perspective cavalière, arête de base \texttt{longueur}, hauteur \texttt{hauteur}.
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{[angle]} & angle de fuite de la perspective & \texttt{50}° \\
+\texttt{[labels]} & noms des 8 sommets & \texttt{A,B,C,D,E,F,G,H} \\
+\texttt{\{longueur\}} & longueur de l'arête (base carrée) & --- \\
+\texttt{\{hauteur\}} & hauteur du cube/pavé & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+\cube[50][A,B,C,D,E,F,G,H]{4}{3}
+\end{lstlisting}
+
+\begin{noteFig}
+Selon que l'angle de fuite est inférieur ou supérieur à $90°$, les arêtes visibles/cachées (traits pleins/pointillés) sont inversées automatiquement (test \texttt{\textbackslash pgfmathparse\{\textbackslash figAngle < 90\}}), pour que la face arrière reste toujours celle en pointillés, quel que soit le sens de la perspective choisie.
+\end{noteFig}
+
+\subsection{\cmdname{prisme[angle][labels]\{base\}\{hauteur\}\{angle1\}\{angle2\}}}
+
+Trace un prisme droit dont la base est un triangle défini par sa longueur \texttt{base} (segment \texttt{AB}) et les deux angles \texttt{angle1}/\texttt{angle2} en \texttt{A} et \texttt{B} (construction via \texttt{\textbackslash tkzDefTriangle[two angles=...]}).
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{[angle]} & angle/direction de l'extrusion (perspective) & \texttt{25}° \\
+\texttt{[labels]} & noms des 6 sommets (base + sommets extrudés) & \texttt{A,B,C,E,F} \\
+\texttt{\{base\}} & longueur du côté \texttt{AB} du triangle de base & --- \\
+\texttt{\{hauteur\}} & longueur de l'extrusion & --- \\
+\texttt{\{angle1\}} & angle du triangle en \texttt{A} & --- \\
+\texttt{\{angle2\}} & angle du triangle en \texttt{B} & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+\prisme[25][A,B,C,D,E,F]{5}{6}{60}{70}
+\end{lstlisting}
+
+\begin{avertissement}
+La liste par défaut \texttt{[labels]} de \cmdname{prisme} ne comporte que \textbf{6} noms (\texttt{A,B,C,E,F} — notez qu'il n'y a pas de sixième nom par défaut listé dans le code malgré 6 points tracés \texttt{A,B,C,D,E,F}) : si vous personnalisez les labels, fournissez bien \textbf{6} noms séparés par des virgules pour couvrir les points \texttt{A} à \texttt{F} utilisés en interne.
+\end{avertissement}
+
+\subsection{\cmdname{pyramide[angle][labels]\{base\}\{angleSommet1\}\{angleSommet2\}}}
+
+Trace une pyramide à base quadrangulaire (rectangle en profondeur relative $0{,}75\times$\texttt{base}), le sommet \texttt{S} étant construit comme pour un triangle \texttt{ABS} d'angles \texttt{angleSommet1}/\texttt{angleSommet2} en \texttt{A}/\texttt{B}.
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{[angle]} & angle de fuite (profondeur de la base) & \texttt{30}° \\
+\texttt{[labels]} & noms des 5 sommets & \texttt{A,B,C,D,S} \\
+\texttt{\{base\}} & longueur du côté \texttt{AB} & --- \\
+\texttt{\{angleSommet1\}} & angle en \texttt{A} du triangle définissant \texttt{S} & --- \\
+\texttt{\{angleSommet2\}} & angle en \texttt{B} du triangle définissant \texttt{S} & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+\pyramide[30][A,B,C,D,S]{5}{65}{65}
+\end{lstlisting}
+
+\subsection{\cmdname{tetra[angle][labels]\{base\}\{angleSommet1\}\{angleSommet2\}}}
+
+Trace un tétraèdre : base triangulaire \texttt{ABC} (profondeur relative $0{,}5\times$\texttt{base}), sommet \texttt{S} construit comme pour \cmdname{pyramide}.
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{[angle]} & angle de fuite & \texttt{30}° \\
+\texttt{[labels]} & noms des 4 sommets & \texttt{A,B,C,S} \\
+\texttt{\{base\}} & longueur du côté \texttt{AB} & --- \\
+\texttt{\{angleSommet1\}} & angle en \texttt{A} pour construire \texttt{S} & --- \\
+\texttt{\{angleSommet2\}} & angle en \texttt{B} pour construire \texttt{S} & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+\tetra[30][A,B,C,S]{4}{60}{60}
+\end{lstlisting}
+
+%=========================================================
+\section{Figures planes}
+%=========================================================
+
+\subsection{\cmdname{FigQuadrilatere\{A\}\{B\}\{C\}\{D\}\{centre\}\{positionLabelCentre\}}}
+
+Commande \textbf{interne générique}, utilisée par \cmdname{carre}, \cmdname{rectangle}, \cmdname{parallelogramme}, \cmdname{losange} et \cmdname{trapeze} : trace le polygone \texttt{ABCD} (déjà défini comme points \pkg{tkz-euclide}), l'étiquette (\texttt{A},\texttt{B} en dessous, \texttt{C},\texttt{D} au-dessus), et si le 5\textsuperscript{e} argument \texttt{centre} n'est pas vide, trace en plus les deux diagonales, leur intersection (nommée \texttt{centre}) et son étiquette (positionnée selon le 6\textsuperscript{e} argument).
+
+\begin{noteFig}
+Vous n'appelez normalement \textbf{jamais} \cmdname{FigQuadrilatere} directement ; elle est documentée ici pour comprendre le fonctionnement de \texttt{[nom\_centre]} dans les commandes suivantes.
+\end{noteFig}
+
+\subsection{\cmdname{carre[labels]\{côté\}[nom\_centre]}}
+
+\begin{lstlisting}
+\carre[A,B,C,D]{4}[O]
+\end{lstlisting}
+
+Trace un carré de côté donné. Si \texttt{[nom\_centre]} est renseigné, les diagonales sont tracées et leur intersection nommée et étiquetée en dessous.
+
+\subsection{\cmdname{rectangle[labels]\{longueur\}\{largeur\}[nom\_centre]}}
+
+\begin{lstlisting}
+\rectangle[A,B,C,D]{6}{3}[O]
+\end{lstlisting}
+
+\subsection{\cmdname{parallelogramme[angle][labels]\{base\}\{côté\}[nom\_centre]}}
+
+\begin{lstlisting}
+\parallelogramme[60][A,B,C,D]{5}{3}[O]
+\end{lstlisting}
+
+L'angle (défaut $60°$) est l'angle en \texttt{A} entre la base \texttt{AB} et le côté \texttt{AD}.
+
+\subsection{\cmdname{losange[angle][labels]\{côté\}[nom\_centre]}}
+
+\begin{lstlisting}
+\losange[50][A,B,C,D]{4}[O]
+\end{lstlisting}
+
+Cas particulier de parallélogramme aux 4 côtés égaux. Si \texttt{nom\_centre} est fourni, son étiquette est positionnée \texttt{below left=2mm and -1mm of} le point centre (positionnement \texttt{tikz} relatif, différent des autres figures qui étiquettent simplement \texttt{below}).
+
+\subsection{\cmdname{trapeze[angle][labels]\{grandeBase\}\{petiteBase\}\{hauteur\}[nom\_centre]}}
+
+\begin{lstlisting}
+\trapeze[70][A,B,C,D]{6}{3}{4}[O]
+\end{lstlisting}
+
+\texttt{angle} (défaut $70°$) est l'angle en \texttt{A} entre la grande base \texttt{AB} et le côté oblique \texttt{AD} ; la longueur \texttt{AD} est recalculée automatiquement ($AD = hauteur/\sin(angle)$) pour respecter la hauteur demandée.
+
+\subsection{\cmdname{Triangle*[angleA][labels]\{base\}\{angleB\}}}
+
+Trace un triangle \texttt{ABC} défini par sa base \texttt{AB} et les deux angles \texttt{angleA}/\texttt{angleB} (construction \texttt{\textbackslash tkzDefTriangle[two angles=...]}).
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{*} & si présent, trace la hauteur et l'angle droit \emph{si le triangle est rectangle} & --- \\
+\texttt{[angleA]} & angle en \texttt{A} & \texttt{60}° \\
+\texttt{[labels]} & noms des sommets + pied de hauteur & \texttt{A,B,C,H} \\
+\texttt{\{base\}} & longueur \texttt{AB} & --- \\
+\texttt{\{angleB\}} & angle en \texttt{B} & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+\Triangle*[90][A,B,C,H]{5}{40}
+\end{lstlisting}
+
+\begin{noteFig}
+Avec la forme étoilée \texttt{Triangle*}, le package détecte \textbf{automatiquement} lequel des trois angles ($A$, $B$ ou $C=180-A-B$) vaut $90°$ (à $0{,}01°$ près), trace la hauteur correspondante en pointillés, place le pied \texttt{H}, et marque l'angle droit avec \texttt{\textbackslash tkzMarkRightAngle}. Si aucun angle n'est droit, la forme étoilée n'a aucun effet visuel supplémentaire.
+\end{noteFig}
+
+\subsection{\cmdname{cercle*[angle][labels]\{rayon\}}}
+
+\begin{lstlisting}
+\cercle*[30][O,A]{3}
+\end{lstlisting}
+
+Trace un cercle de centre \texttt{O} (origine) et de rayon donné. La forme étoilée \texttt{cercle*} trace en plus un rayon \texttt{OA} (à l'angle \texttt{[angle]}, défaut $30°$) et place/étiquette le point \texttt{A}.
+
+\subsection{\cmdname{thales*[angle][labels]\{angleSecantes\}\{dist1\}\{dist2\}}}
+
+Trace une configuration de Thalès : deux droites sécantes en un point \texttt{O}, coupées par deux parallèles.
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{*} & configuration « papillon » (\texttt{O} entre les deux parallèles) & (config. standard sinon) \\
+\texttt{[angle]} & rotation globale de la figure & \texttt{0}° \\
+\texttt{[labels]} & noms des 5 points & \texttt{O,A,B,C,D} \\
+\texttt{\{angleSecantes\}} & angle entre les deux sécantes issues de \texttt{O} & --- \\
+\texttt{\{dist1\}} & distance \texttt{O}--première parallèle & --- \\
+\texttt{\{dist2\}} & distance \texttt{O}--deuxième parallèle & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+% Configuration standard (O au-dela des paralleles)
+\thales[0][O,A,B,C,D]{40}{3}{5}
+
+% Configuration papillon (O entre les deux paralleles)
+\thales*[0][O,A,B,C,D]{40}{3}{5}
+\end{lstlisting}
+
+Dans la configuration standard, les deux sécantes sont tracées de \texttt{O} vers \texttt{B} et \texttt{D} (prolongées). Dans la configuration « papillon », \texttt{A}/\texttt{C} et \texttt{B}/\texttt{D} sont de part et d'autre de \texttt{O}, et les droites sont tracées de \texttt{A} à \texttt{B} et de \texttt{C} à \texttt{D}.
+
+\subsection{\cmdname{parallelesSecante*[angle][labels]\{distance\}\{demi-longueur\}}}
+
+Trace deux droites parallèles coupées par une sécante, avec les deux points d'intersection.
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Argument} & \textbf{Rôle} & \textbf{Défaut} \\
+\midrule
+\texttt{*} & marque les angles alternes-internes en \texttt{M} et \texttt{N} & --- \\
+\texttt{[angle]} & angle de la sécante par rapport à l'horizontale & \texttt{60}° \\
+\texttt{[labels]} & 6 noms : \texttt{A,B} (droite 1), \texttt{C,D} (droite 2), \texttt{M,N} (intersections) & \texttt{A,B,C,D,M,N} \\
+\texttt{\{distance\}} & écart vertical entre les deux parallèles & --- \\
+\texttt{\{demi-longueur\}} & longueur de chaque côté du point d'intersection, sur chaque droite & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}
+\parallelesSecante*[60][A,B,C,D,M,N]{3}{4}
+\end{lstlisting}
+
+%=========================================================
+\section{Aide-mémoire --- \texttt{FigMath}}
+%=========================================================
+
+\begin{lstlisting}
+% Chargement
+\usepackage{FigMath}
+% Toute figure se trace dans un tikzpicture :
+\begin{tikzpicture}
+  ...
+\end{tikzpicture}
+
+% ---- Solides (perspective cavaliere) ----
+\cylindre[arc][prefixe]{rayon}{hauteur}
+\cylpoint{angle}{bas|haut}{nom}        % apres \cylindre, meme figure
+\cone*[arc][labels]{rayon}{hauteur}
+\cube[angle][labels]{longueur}{hauteur}
+\prisme[angle][labels]{base}{hauteur}{angle1}{angle2}
+\pyramide[angle][labels]{base}{angleSommet1}{angleSommet2}
+\tetra[angle][labels]{base}{angleSommet1}{angleSommet2}
+
+% ---- Figures planes ----
+\carre[labels]{cote}[nom_centre]
+\rectangle[labels]{longueur}{largeur}[nom_centre]
+\parallelogramme[angle][labels]{base}{cote}[nom_centre]
+\losange[angle][labels]{cote}[nom_centre]
+\trapeze[angle][labels]{grandeBase}{petiteBase}{hauteur}[nom_centre]
+\Triangle*[angleA][labels]{base}{angleB}
+\cercle*[angle][labels]{rayon}
+\thales*[angle][labels]{angleSecantes}{dist1}{dist2}
+\parallelesSecante*[angle][labels]{distance}{demi-longueur}
+\end{lstlisting}
+
+%=========================================================
+\section{Utilisation conjointe avec \texttt{ProfModels}}
+%=========================================================
+
+Ces deux packages sont conçus pour être chargés automatiquement par \texttt{ProfModels} via ses options de module (voir la documentation de \texttt{ProfModels}, section « Modules optionnels ») :
+
+\begin{lstlisting}
+\usepackage[diag,fig]{ProfModels}   % ou [all] pour tout charger (diag+fig+style)
+\end{lstlisting}
+
+On peut alors les utiliser directement à l'intérieur d'un exercice :
+
+\begin{lstlisting}
+\begin{Maquette}[DM=true]{Numero=5, Classe=3AC}
+  \begin{exercice}
+    On considere le solide ci-dessous.
+    \begin{center}
+    \begin{tikzpicture}
+      \cube[50]{4}{3}
+    \end{tikzpicture}
+    \end{center}
+
+    \Histogramme[Largeur=8,Hauteur=5,Titre={Notes de la classe}]%
+      {0/5.2 5/10.6 10/15.10 15/20.2}
+  \end{exercice}
+\end{Maquette}
+\end{lstlisting}
+
+%=========================================================
+\section{Limitations connues et points de vigilance}
+%=========================================================
+
+\begin{itemize}
+  \item \pkg{Diagrammes} et \pkg{FigMath} chargent tous deux \texttt{tkz-euclide} avec l'option \texttt{[lua]} : une compilation avec \textbf{LuaLaTeX} est donc recommandée (cohérent avec l'exigence de \texttt{ProfModels} lui-même).
+  \item Dans \cmdname{prisme}, la liste de labels par défaut (\texttt{A,B,C,E,F}) ne compte que 5 noms alors que 6 points (\texttt{A} à \texttt{F}) sont utilisés en interne : personnalisez toujours \texttt{[labels]} avec exactement 6 noms si vous en changez.
+  \item La clé \texttt{Grille} du jeu \texttt{histostats} est déclarée mais non exploitée dans le code fourni (seule \texttt{GrilleV} a un effet visible, sur \cmdname{Histogramme} uniquement).
+  \item \cmdname{HistogrammeTikz} ne recadre \textbf{pas} automatiquement l'échelle du \texttt{tikzpicture} englobant : les unités \texttt{x}/\texttt{y} de ce dernier doivent être cohérentes avec les données fournies si vous le combinez à un \texttt{Repere}.
+  \item Les packages \pkg{simplekv} et \pkg{listofitems}, requis par \pkg{Diagrammes} (et pour \pkg{simplekv} par \pkg{FigMath} de façon indirecte via \texttt{ProfModels}), doivent être installés séparément s'ils ne font pas partie de votre distribution TeX Live/MiKTeX de base.
+\end{itemize}
+
+\end{document}
