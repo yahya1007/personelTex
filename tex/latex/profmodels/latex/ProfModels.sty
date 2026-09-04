@@ -563,14 +563,14 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
 \tcbset{%
   tikzds/.style={%
     attach boxed title to top left={xshift=1cm,yshift*=1mm-\tcboxedtitleheight},
+    coltitle=black,
     boxed title style={frame code={
-        \path[fill=tcbcolback!30!black]
+        \path[fill=tcbcolback!30!black,draw=black]
         ([yshift=-1mm,xshift=-1mm]frame.north west)
         arc[start angle=0,end angle=180,radius=1mm]
         ([yshift=-1mm,xshift=1mm]frame.north east)
         arc[start angle=180,end angle=0,radius=1mm];
-        \path[left color=tcbcolback!60!black,right color=tcbcolback!60!black,
-        middle color=tcbcolback!80!black]
+        \path[top color=white,bottom color=black!40,draw=black]
         ([xshift=-2mm]frame.north west) -- ([xshift=2mm]frame.north east)
         [rounded corners=1mm]-- ([xshift=1mm,yshift=-1mm]frame.north east)
         -- (frame.south east) -- (frame.south west)
@@ -723,6 +723,27 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
   \fi
 }%
 %-------------------------------------------------------
+%  Ruban/étiquette avec dégradé et petites bosses (dsnode) ---
+\NewDocumentCommand{\dsnode}{m}{%
+  % noeud invisible, seulement pour calculer la taille du ruban
+  \node[rectangle, minimum height=6mm, inner xsep=2pt, inner ysep=0pt, font=\bfseries\sffamily, text opacity=1] (dsnodetmp) {#1};
+  % petites bosses arrondies en haut (comme les "pieds" de l'étiquette)
+  \path[fill=tcbcolback!30!black,draw=black]
+    ([yshift=-1mm,xshift=-1mm]dsnodetmp.north west)
+    arc[start angle=0,end angle=180,radius=1mm]
+    ([yshift=-1mm,xshift=1mm]dsnodetmp.north east)
+    arc[start angle=180,end angle=0,radius=1mm];
+  % corps du ruban en dégradé
+  \path[top color=white,bottom color=black!40,draw=black]
+    ([xshift=-2mm]dsnodetmp.north west) -- ([xshift=2mm]dsnodetmp.north east)
+    [rounded corners=1mm]-- ([xshift=1mm,yshift=-1mm]dsnodetmp.north east)
+    -- (dsnodetmp.south east) -- (dsnodetmp.south west)
+    -- ([xshift=-1mm,yshift=-1mm]dsnodetmp.north west)
+    [sharp corners]-- cycle;
+  % texte, redessiné par-dessus le ruban
+  \node[font=\bfseries\sffamily, text=black, inner xsep=2pt, inner ysep=2pt] at (dsnodetmp) {#1};
+}
+
 \NewDocumentEnvironment{exerciceDS}{O{}O{tikzds}}{%
   \setcounter{PfMAlea}{0}%
   \useKVdefault[ClesExercices]%
@@ -767,17 +788,21 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
         {\scriptsize\sffamily \useKV[ClesExercices]{Source}};
       }{}
       \ifboolKV[ClesExercices]{BaremeTotal}{%
-        \node[%
-        inner ysep=0pt,
-        inner xsep=5pt,
-        fill=white,
-        anchor=east,
-        xshift=-10pt,
-        text=black,
-        font=\bfseries
-        ]
-        at (frame.north east)
-        {\footnotesize\sffamily \total{\theMaquette-\the\c@PfMExo}};
+%        \node[%
+%        inner ysep=0pt,
+%        inner xsep=5pt,
+%        fill=white,
+%        anchor=east,
+%        xshift=-10pt,
+%        text=black,
+%        font=\bfseries
+%        ]
+%        at (frame.north east)
+%        {\footnotesize\sffamily \total{\theMaquette-\the\c@PfMExo}};
+ \coordinate (cc) at ([xshift=-20mm,yshift=-2.1mm,inner ysep=0pt,inner xsep=2pt]frame.north east);
+    \begin{scope}[shift={(cc)}]
+      \dsnode{\footnotesize\sffamily \total{\theMaquette-\the\c@PfMExo}}
+    \end{scope}
       }{}
     },%
   label is label,

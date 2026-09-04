@@ -24,9 +24,11 @@
 % ==============================================================
 % \figposresolve{defaults}{labels}{useroverride}{\resultcs}
 %
-% Resout la liste des positions d'une figure. La syntaxe pour
-% "useroverride" est :
+% Resout la liste des positions d'une figure, en acceptant DEUX
+% syntaxes pour "useroverride" :
 %   - vide                     -> on garde "defaults" tel quel
+%   - liste positionnelle      -> "above,above,below,below"
+%     (une position par point, dans l'ordre, comme avant)
 %   - liste cible par nom      -> "P=above,S=below"
 %     (seuls les points cites sont modifies, les autres gardent
 %      leur position par defaut)
@@ -74,11 +76,15 @@
     \tl_if_blank:nTF { #3 }
       { \tl_set:Nn #4 { #1 } }
       {
-        \tl_set:Nx \l_fig_defaults_tl { #1 }
-        \tl_set:Nx \l_fig_labels_tl { #2 }
-        \tl_set:Nx \l_fig_override_tl { #3 }
-        \fig_build_by_name:VVV \l_fig_defaults_tl \l_fig_labels_tl \l_fig_override_tl
-        \tl_set_eq:NN #4 \l_fig_result_tl
+        \str_if_in:nnTF { #3 } { = }
+          {
+            \tl_set:Nx \l_fig_defaults_tl { #1 }
+            \tl_set:Nx \l_fig_labels_tl { #2 }
+            \tl_set:Nx \l_fig_override_tl { #3 }
+            \fig_build_by_name:VVV \l_fig_defaults_tl \l_fig_labels_tl \l_fig_override_tl
+            \tl_set_eq:NN #4 \l_fig_result_tl
+          }
+          { \tl_set:Nn #4 { #3 } }
       }
   }
 \ExplSyntaxOff
