@@ -121,7 +121,13 @@ label-format =\bfseries, label-offset ={1em},label-width={1em},item-indent ={2em
 %définition des clés
 \RequirePackage{simplekv}
 
-\setKVdefault[Boulot]{Fiche=false,DM=false,DS=false,DevS=false,Exam=false,Olym=false}%
+\RequirePackage{verbatim}% pour \comment et la capture verbatim des solutions
+
+\setKVdefault[Boulot]{Fiche=false,DM=false,DS=false,DevS=false,Exam=false,Olym=false,
+CorrigeApres=false,CorrigeFin=false}%
+% CorrigeApres : la solution est imprimee juste apres son exercice.
+% CorrigeFin   : les solutions sont regroupees a la fin de la Maquette.
+% Aucune des deux : les solutions sont purement et simplement ignorees.
 
 \setKVdefault[DM]{Numero=1,Date=\today, Prive=true, Classe={},Niveau=3,Code={},Semestre=1, FinDate=\today}
 
@@ -135,7 +141,10 @@ Calculatrice=false,Sujet={}}%
 
 \setKVdefault[ClesExercices]{BaremeTotal=true,BaremeDetaille=false,MotPoint=point,
 Calculatrice=true,TitreExo=Exercice,AffichageTitre=false,
-AffichageCompetence=false,AffichageSource=false,Id={},Print=true}%
+AffichageCompetence=false,AffichageSource=false,Id={},Print=true,
+PasCorrige=false,TitreCorrige=Corrigé de l'exercice}%
+% PasCorrige   : cet exercice n'aura jamais de corrige affiche.
+% TitreCorrige : titre du corrige de cet exercice.
 % Id : identifiant de l'exercice pour le tirage aléatoire (voir \ChoisirExercices).
 % Un exercice sans Id (valeur par défaut) est toujours affiché.
 
@@ -160,6 +169,9 @@ AffichageCompetence=false,AffichageSource=false,Id={},Print=true}%
 \setcounter{PfMNbLogo}{0}%
 \newcounter{Maquette}%Pour compter le nombres de "travaux"
 \setcounter{Maquette}{0}%
+
+\newcounter{RetiensSol}%0 = solution ignoree, 1 = ecrite pour la fin, 2 = affichee de suite
+\setcounter{RetiensSol}{0}%
 
 % couleurs --------------------------------------------------
 
@@ -662,6 +674,7 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
   \else
     \egroup%
   \fi
+  \PfMFinExerciceCorrection
 }
 %-----------------------------------------------------
 \NewDocumentEnvironment{exerciceFiche}{O{} O{tikzfiche}}{%
@@ -721,6 +734,7 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
   \else
     \egroup%
   \fi
+  \PfMFinExerciceCorrection
 }%
 %-------------------------------------------------------
 %  Ruban/étiquette avec dégradé et petites bosses (dsnode) ---
@@ -817,6 +831,7 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
   \else
     \egroup%
   \fi
+  \PfMFinExerciceCorrection
 }%
 %-------Style Maquette DevS -------------------------------
 \newcommand\TikzDevS{%
@@ -844,6 +859,136 @@ attach boxed title to top left={xshift=5mm , yshift=-\tcboxedtitleheight+3mm},
 %-----------------------------------------------------
 %Alias pour tous les exercices.
 \NewDocumentEnvironment{exercice}{}{}{}%
+
+%=====================================================
+% ENVIRONNEMENT Solution (sur le modele de ProfMaquette)
+%=====================================================
+% Usage : APRES l'exercice auquel elle se rapporte.
+%   \begin{exercice}
+%     Enonce...
+%   \end{exercice}
+%   \begin{Solution}
+%     Corrige...
+%   \end{Solution}
+%
+% Trois comportements, selon les cles de \begin{Maquette}[...]{...} :
+%   - aucune cle          : le contenu de Solution est purement ignore (sujet eleve)
+%   - CorrigeApres        : le corrige est imprime juste apres son exercice
+%   - CorrigeFin          : le corrige est ecrit dans un fichier
+%                           \jobname-Ma<n>-Ex<p>.sol puis tous les corriges sont
+%                           imprimes ensemble a la fin de la Maquette
+% Cle par exercice : PasCorrige=true -> cet exercice n'a jamais de corrige.
+% Un exercice non affiche (Print=false, non tire par \ChoisirExercices...)
+% n'a pas de corrige non plus : sa Solution est ignoree.
+
+\colorlet{PfMCadreCorrige}{PfMCadreDM}
+
+% NB : dans un fichier .sty, @ est deja une lettre : pas de \makeatletter ici,
+% et surtout pas de \makeatother qui casserait tout le reste du fichier.
+\newwrite\PfMverbatim@out
+
+% --- 1. Ecriture verbatim du corrige dans un fichier (mode CorrigeFin)
+\def\SolutionWrite{%
+  \setcounter{PfMAlea}{0}%
+  \@bsphack
+  \immediate\openout\PfMverbatim@out "\jobname-Ma\theMaquette-Ex\thePfMExo.sol"%
+  \let\do\@makeother\dospecials
+  \catcode`\^^M\active
+  \def\verbatim@processline{%
+    \immediate\write\PfMverbatim@out{\the\verbatim@line}}%
+  \verbatim@start}%
+\def\endSolutionWrite{\immediate\closeout\PfMverbatim@out\@esphack}%
+
+% --- 2. Affichage immediat du corrige (mode CorrigeApres)
+\def\SolutionNow{%
+  \par\nopagebreak
+  \begin{tcolorbox}[%
+    enhanced,
+    breakable,
+    colback=white,
+    colframe=PfMCadreCorrige,
+    fonttitle=\bfseries\sffamily,
+    title=\csname PfMTitreCorrige@\theMaquette @\thePfMExo\endcsname\ \thePfMExo,
+  ]%
+}%
+\def\endSolutionNow{\end{tcolorbox}\par\goodbreak}%
+
+% --- 3. Par defaut : le corrige est avale (rien n'est imprime)
+\let\Solution\comment
+\let\endSolution\endcomment
+\let\solution\Solution
+\let\endsolution\endSolution
+
+% --- Choix fait a la fin de chaque exercice : ce corrige doit-il exister ?
+\newcommand\PfMChoixCorrection{%
+  \setcounter{RetiensSol}{0}%
+  \ifPfMAfficherExo
+    \ifboolKV[ClesExercices]{PasCorrige}{}{%
+      \ifboolKV[Boulot]{CorrigeFin}{%
+        \setcounter{RetiensSol}{1}%
+      }{%
+        \ifboolKV[Boulot]{CorrigeApres}{\setcounter{RetiensSol}{2}}{}%
+      }%
+    }%
+    % on memorise le titre du corrige de CET exercice
+    \expandafter\xdef\csname PfMTitreCorrige@\theMaquette @\thePfMExo\endcsname
+      {\useKV[ClesExercices]{TitreCorrige}}%
+  \fi
+}%
+
+% --- On donne a \Solution le sens correspondant.
+% Les \let doivent etre GLOBAUX : ce choix est fait a la fin de
+% l'environnement exercice, donc a l'interieur du groupe ouvert par
+% \begin{exercice} ; une affectation locale serait perdue des \end{exercice}.
+\newcommand\PfMChoixAffichageCorrection{%
+  \ifnum\theRetiensSol=1\relax
+    \global\let\Solution\SolutionWrite\global\let\endSolution\endSolutionWrite
+  \else
+    \ifnum\theRetiensSol=2\relax
+      \global\let\Solution\SolutionNow\global\let\endSolution\endSolutionNow
+    \else
+      \global\let\Solution\comment\global\let\endSolution\endcomment
+    \fi
+  \fi
+  \global\let\solution\Solution\global\let\endsolution\endSolution
+}%
+
+% --- Appele a la fin de chaque environnement exercice.
+\newcommand\PfMFinExerciceCorrection{%
+  \PfMChoixCorrection
+  \PfMChoixAffichageCorrection
+}%
+
+% --- Bandeau separant les exercices des corriges (redefinissable par l'utilisateur)
+\newcommand\PfMBandeauCorrection{%
+  \clearpage
+  \begin{tcolorbox}[colback=lightgrey,colframe=PfMCadreCorrige,
+    fonttitle=\bfseries\sffamily,enhanced]
+    \begin{Large}\bfseries\sffamily Correction\end{Large}
+  \end{tcolorbox}%
+  \par\medskip
+}%
+
+% --- Affichage groupe de tous les corriges de la Maquette (mode CorrigeFin)
+\newcommand\PfMAffichageCorrige{%
+  \ifnum\value{PfMExo}>0\relax
+    \foreach \PfMiSol in {1,...,\thePfMExo}{%
+      \IfFileExists{\jobname-Ma\theMaquette-Ex\PfMiSol.sol}{%
+        \setcounter{PfMAlea}{0}%
+        \begin{tcolorbox}[%
+          enhanced,
+          breakable,
+          colback=white,
+          colframe=PfMCadreCorrige,
+          fonttitle=\bfseries\sffamily,
+          title=\csname PfMTitreCorrige@\theMaquette @\PfMiSol\endcsname\ \PfMiSol,
+        ]
+        \input{\jobname-Ma\theMaquette-Ex\PfMiSol.sol}%
+        \end{tcolorbox}%
+      }{}%
+    }%
+  \fi
+}%
 
 %%%%%%%%%% Style Maquettes ---------------------------
 
@@ -958,6 +1103,12 @@ finish={\draw[gray!50!black,line width=2pt]
           {}%
 }}}}}}{%
     \PfMAfficherExercicesPermutes  % ← AJOUT
+  \ifboolKV[Boulot]{CorrigeFin}{%
+    \PfMBandeauCorrection
+    \PfMAffichageCorrige
+  }{}%
+  \setcounter{RetiensSol}{0}%
+  \PfMChoixAffichageCorrection% hors Maquette, les Solution sont de nouveau ignorees
   \edef\@currentlabel{\thePfMExoCatalogue}%
   \label{PfMFinMaquette\theMaquette}%
 }%    
